@@ -1,102 +1,310 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiPlus, FiMinus, FiTrash2 } from "react-icons/fi";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const Billing = () => {
-  const [customerName, setCustomerName] = useState('');
-  const [customerMobile, setCustomerMobile] = useState('');
+  const { backendUrl, token } = useContext(AppContext);
+  const navigate = useNavigate();
+
+  const [customerName, setCustomerName] = useState("");
+  const [customerMobile, setCustomerMobile] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
-  
-  const inventoryItems = [
-    { name: 'Item 1', price: 50 },
-    { name: 'Item 2', price: 75 },
-    { name: 'Item 3', price: 100 },
-    { name: 'Item 4', price: 150 },
-    { name: 'Item 5', price: 200 },
-  ];
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Validate mobile number format
+  const validateMobileNumber = (number) => {
+    // Allow empty string during typing
+    if (number === "") return true;
+    
+    // Check if it starts with + and has 12 digits
+    if (number.startsWith("+")) {
+      return /^\+\d{11}$/.test(number);
+    }
+    
+    // Check if it has exactly 10 digits
+    return /^\d{10}$/.test(number);
+  };
+
+  // Handle mobile number change
+  const handleMobileChange = (e) => {
+    const number = e.target.value;
+    
+    // Only allow digits and + at the start
+    if (!/^[+\d]*$/.test(number)) return;
+    
+    // If + is present, it must be at the start
+    if (number.includes("+") && number[0] !== "+") return;
+    
+    // Limit length based on whether it starts with +
+    if (number.startsWith("+") && number.length > 12) return;
+    if (!number.startsWith("+") && number.length > 10) return;
+    
+    setCustomerMobile(number);
+  };
+
+  // Fetch inventory items
+  useEffect(() => {
+    fetchInventoryItems();
+  }, []);
+
+  const fetchInventoryItems = async () => {
+    try {
+
+      const response = await axios.get(
+        backendUrl + "/api/user/get-inventory",
+        { headers: { token } }
+      );
+
+      if (response.data.success) {
+        setInventoryItems(response.data.items);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching inventory:", error);
+      toast.error("Failed to fetch inventory items");
+    }
+  };
 
   const handleAddItemToBill = (item) => {
-    setSelectedItems((prevItems) => [...prevItems, item]);
+    const existingItem = selectedItems.find((i) => i.itemId === item._id);
+    if (existingItem) {
+      if (existingItem.quantity >= item.quantity) {
+        toast.error("Insufficient stock");
+        return;
+      }
+      setSelectedItems(
+        selectedItems.map((i) =>
+          i.itemId === item._id ? { ...i, quantity: i.quantity + 1 } : i
+        )
+      );
+    } else {
+      setSelectedItems([
+        ...selectedItems,
+        {
+          itemId: item._id,
+          name: item.name,
+          price: item.price,
+          quantity: 1,
+        },
+      ]);
+    }
+  };
+
+  const handleUpdateQuantity = (index, change) => {
+    const item = selectedItems[index];
+    const inventoryItem = inventoryItems.find((i) => i._id === item.itemId);
+
+    if (change > 0 && item.quantity >= inventoryItem.quantity) {
+      toast.error("Insufficient stock");
+      return;
+    }
+
+    const newQuantity = item.quantity + change;
+    if (newQuantity < 1) {
+      handleRemoveItem(index);
+      return;
+    }
+
+    setSelectedItems(
+      selectedItems.map((item, i) =>
+        i === index ? { ...item, quantity: newQuantity } : item
+      )
+    );
   };
 
   const handleRemoveItem = (index) => {
-    const itemToRemove = selectedItems[index];
     setSelectedItems(selectedItems.filter((_, i) => i !== index));
   };
 
-  const totalAmount = selectedItems.reduce((total, item) => total + item.price, 0);
+  const totalAmount = selectedItems.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  const handleCreateBill = async () => {
+    if (!customerName || !customerMobile) {
+      toast.error("Please enter customer details");
+      return;
+    }
+    if (!validateMobileNumber(customerMobile)) {
+      toast.error("Please enter a valid mobile number");
+      return;
+    }
+    if (selectedItems.length === 0) {
+      toast.error("Please add items to the bill");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        backendUrl + "/api/user/create-bill",
+        {
+          customerName,
+          customerMobile,
+          items: selectedItems,
+        },
+        { headers: { token } }
+      );
+
+      if (response.data.success) {
+        toast.success("Bill created successfully");
+        setCustomerName("");
+        setCustomerMobile("");
+        setSelectedItems([]);
+        fetchInventoryItems(); // Refresh inventory
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error creating bill:", error);
+      toast.error("Failed to create bill");
+    }
+    setLoading(false);
+  };
+
+  const filteredItems = inventoryItems.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      item.quantity > 0
+  );
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-gray-50 rounded-lg shadow-xl">
-      <h1 className="text-3xl font-bold text-black text-center mb-8">Billing Page</h1>
-      
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-black mb-4">Customer Details</h2>
-        <div className="mb-5">
-          <label className="block text-gray-700 text-sm mb-2">Customer Name</label>
-          <input
-            type="text"
-            value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-            placeholder="Enter name"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm mb-2">Customer Mobile</label>
-          <input
-            type="text"
-            value={customerMobile}
-            onChange={(e) => setCustomerMobile(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-            placeholder="Enter mobile number"
-          />
-        </div>
-      </div>
-      
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-black mb-4">Select Items to Add to Bill</h2>
-        <div className="mb-4">
-          <select
-            onChange={(e) => handleAddItemToBill(inventoryItems[e.target.selectedIndex])}
-            className="w-full px-4 py-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
-          >
-            <option value="">Select an item</option>
-            {inventoryItems.map((item, index) => (
-              <option key={index} value={item.name}>
-                {item.name} - ${item.price}
-              </option>
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left side - Customer Info and Items List */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold mb-4">Create New Bill</h2>
+
+          {/* Customer Details */}
+          <div className="space-y-4 mb-6">
+            <input
+              type="text"
+              placeholder="Customer Name"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="w-full p-2 border rounded"
+            />
+            <div>
+              <input
+                type="text"
+                placeholder="Mobile Number (10 digits or +91xxxxxxxxxx)"
+                value={customerMobile}
+                onChange={handleMobileChange}
+                className={`w-full p-2 border rounded ${
+                  customerMobile && !validateMobileNumber(customerMobile)
+                    ? "border-red-500"
+                    : ""
+                }`}
+              />
+              {customerMobile && !validateMobileNumber(customerMobile) && (
+                <p className="text-red-500 text-sm mt-1">
+                  Enter 10 digits or +91 followed by 10 digits
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Search Items */}
+          <div className="relative mb-4">
+            <FiSearch className="absolute left-3 top-3 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 p-2 border rounded"
+            />
+          </div>
+
+          {/* Items List */}
+          <div className="h-96 overflow-y-auto border rounded">
+            {filteredItems.map((item) => (
+              <div
+                key={item._id}
+                className="flex items-center justify-between p-3 hover:bg-gray-50 border-b"
+              >
+                <div>
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-sm text-gray-600">
+                    Stock: {item.quantity} | Price: LKR {item.price}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleAddItemToBill(item)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                >
+                  <FiPlus />
+                </button>
+              </div>
             ))}
-          </select>
+          </div>
         </div>
-      </div>
-      
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-black mb-4">Selected Items</h2>
-        <ul>
-          {selectedItems.map((item, index) => (
-            <li key={index} className="flex justify-between mb-2 px-4 py-2 border-b">
-              <span>{item.name}</span>
-              <span className="text-black">${item.price}</span>
-              <button
-                onClick={() => handleRemoveItem(index)}
-                className="text-red-500 hover:text-red-600">
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
-        
-        <div className="mt-4 flex justify-between">
-          <span className="text-lg font-semibold">Total:</span>
-          <span className="text-xl text-black">${totalAmount}</span>
+
+        {/* Right side - Bill Preview */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold mb-4">Bill Preview</h2>
+
+          {/* Selected Items */}
+          <div className="space-y-4 mb-6">
+            {selectedItems.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded"
+              >
+                <div>
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-sm text-gray-600">
+                    LKR {item.price} x {item.quantity} = LKR{" "}
+                    {item.price * item.quantity}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleUpdateQuantity(index, -1)}
+                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                  >
+                    <FiMinus />
+                  </button>
+                  <span className="w-8 text-center">{item.quantity}</span>
+                  <button
+                    onClick={() => handleUpdateQuantity(index, 1)}
+                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                  >
+                    <FiPlus />
+                  </button>
+                  <button
+                    onClick={() => handleRemoveItem(index)}
+                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <FiTrash2 />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Total and Create Bill Button */}
+          <div className="border-t pt-4">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xl font-semibold">Total Amount:</span>
+              <span className="text-xl font-semibold">LKR {totalAmount}</span>
+            </div>
+            <button
+              onClick={handleCreateBill}
+              disabled={loading || selectedItems.length === 0}
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {loading ? "Creating Bill..." : "Create Bill"}
+            </button>
+          </div>
         </div>
-        
-        <button
-          className="mt-6 bg-teal-500 text-white py-2 px-6 rounded-md w-full hover:bg-teal-600 transition duration-300">
-          Generate Bill
-        </button>
       </div>
     </div>
   );

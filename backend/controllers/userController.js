@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
 import Stripe from "stripe";
 import Inventory from "../models/InventoryModel.js";
+import Billing from "../models/BillingModel.js";
 //API to register user
 
 const registerUser = async (req, res) => {
@@ -228,4 +229,92 @@ const deleteInventory = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile, addInventory, getInventory, updateInventory, deleteInventory };
+const createBill = async (req, res) => {
+  try {
+    const { customerName, customerMobile, items } = req.body;
+
+    // Validate input
+    if (!customerName || !customerMobile || !items || items.length === 0) {
+      return res.json({ success: false, message: "Please provide all required fields" });
+    }
+
+    // Calculate total amount and update inventory
+    let totalAmount = 0;
+    for (const item of items) {
+      const inventoryItem = await Inventory.findById(item.itemId);
+      if (!inventoryItem) {
+        return res.json({ success: false, message: `Item ${item.name} not found in inventory` });
+      }
+      if (inventoryItem.quantity < item.quantity) {
+        return res.json({ success: false, message: `Insufficient stock for ${item.name}` });
+      }
+      
+      // Update inventory quantity using updateOne to skip validation
+      await Inventory.updateOne(
+        { _id: item.itemId },
+        { $inc: { quantity: -item.quantity } }
+      );
+      
+      totalAmount += item.price * item.quantity;
+    }
+
+    // Create new bill
+    const newBill = new Billing({
+      customerName,
+      customerMobile,
+      items,
+      totalAmount,
+    });
+
+    await newBill.save();
+
+    res.json({ 
+      success: true, 
+      message: "Bill created successfully", 
+      bill: newBill 
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const getBills = async (req, res) => {
+  try {
+    const bills = await Billing.find().sort({ date: -1 });
+    res.json({ success: true, bills });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const getBillById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const bill = await Billing.findById(id);
+    
+    if (!bill) {
+      return res.json({ success: false, message: "Bill not found" });
+    }
+
+    res.json({ success: true, bill });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+export { 
+  registerUser, 
+  loginUser, 
+  getProfile, 
+  updateProfile, 
+  addInventory, 
+  getInventory, 
+  updateInventory, 
+  deleteInventory,
+  createBill,
+  getBills,
+  getBillById 
+};
