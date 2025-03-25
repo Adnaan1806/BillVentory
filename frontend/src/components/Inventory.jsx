@@ -7,6 +7,8 @@ import { AppContext } from "../context/AppContext";
 const Inventory = () => {
   const [items, setItems] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const [newItem, setNewItem] = useState({ name: '', description: '', quantity: '', price: '' });
   const [editingItem, setEditingItem] = useState(null);
   const { backendUrl, token } = useContext(AppContext);
@@ -93,24 +95,29 @@ const Inventory = () => {
     }
   };
 
-  const handleDeleteItem = async (id) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      try {
-        const { data } = await axios.delete(
-          `${backendUrl}/api/user/delete-inventory/${id}`,
-          { headers: { token } }
-        );
+  const handleDeleteClick = (item) => {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+  };
 
-        if (data.success) {
-          toast.success(data.message);
-          setItems(items.filter(item => item._id !== id));
-        } else {
-          toast.error(data.message);
-        }
-      } catch (error) {
-        toast.error("Error deleting item");
-        console.error(error);
+  const handleDeleteConfirm = async () => {
+    try {
+      const { data } = await axios.delete(
+        `${backendUrl}/api/user/delete-inventory/${itemToDelete._id}`,
+        { headers: { token } }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        setItems(items.filter(item => item._id !== itemToDelete._id));
+        setIsDeleteModalOpen(false);
+        setItemToDelete(null);
+      } else {
+        toast.error(data.message);
       }
+    } catch (error) {
+      toast.error("Error deleting item");
+      console.error(error);
     }
   };
 
@@ -165,7 +172,7 @@ const Inventory = () => {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteItem(item._id)}
+                    onClick={() => handleDeleteClick(item)}
                     className="text-white bg-red-500 py-1 px-2 rounded-md hover:bg-red-600 transition-all duration-300"
                   >
                     Delete
@@ -250,6 +257,34 @@ const Inventory = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[400px]">
+            <h3 className="text-xl font-semibold mb-4">Delete Item</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete "{itemToDelete?.name}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setItemToDelete(null);
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
