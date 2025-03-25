@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 
 const Sales = () => {
   const { backendUrl, token } = useContext(AppContext);
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [bills, setBills] = useState([]);
@@ -18,10 +18,9 @@ const Sales = () => {
   const fetchBills = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        backendUrl + "/api/user/get-bills",
-        { headers: { token } }
-      );
+      const response = await axios.get(backendUrl + "/api/user/get-bills", {
+        headers: { token },
+      });
       console.log("Bills response:", response.data);
       if (response.data.success) {
         setBills(response.data.bills);
@@ -42,8 +41,8 @@ const Sales = () => {
   // Filter bills based on date range and search query
   const filteredBills = bills.filter((bill) => {
     // Convert bill date to YYYY-MM-DD format for comparison
-    const billDate = new Date(bill.date).toISOString().split('T')[0];
-    
+    const billDate = new Date(bill.date).toISOString().split("T")[0];
+
     // Date range filter
     if (startDate && endDate) {
       const dateInRange = billDate >= startDate && billDate <= endDate;
@@ -68,9 +67,16 @@ const Sales = () => {
     totalSales: filteredBills.reduce((sum, bill) => sum + bill.totalAmount, 0),
     totalBills: filteredBills.length,
     averageBillAmount: filteredBills.length
-      ? (filteredBills.reduce((sum, bill) => sum + bill.totalAmount, 0) / filteredBills.length).toFixed(2)
+      ? (
+          filteredBills.reduce((sum, bill) => sum + bill.totalAmount, 0) /
+          filteredBills.length
+        ).toFixed(2)
       : 0,
-    itemsSold: filteredBills.reduce((sum, bill) => sum + bill.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0),
+    itemsSold: filteredBills.reduce(
+      (sum, bill) =>
+        sum + bill.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+      0
+    ),
   };
 
   // View bill details
@@ -125,7 +131,9 @@ const Sales = () => {
         {/* Date Filter */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
           <div className="flex flex-col w-full sm:w-auto">
-            <label htmlFor="startDate" className="text-sm text-gray-600 mb-1">From</label>
+            <label htmlFor="startDate" className="text-sm text-gray-600 mb-1">
+              From
+            </label>
             <input
               id="startDate"
               type="date"
@@ -135,7 +143,9 @@ const Sales = () => {
             />
           </div>
           <div className="flex flex-col w-full sm:w-auto">
-            <label htmlFor="endDate" className="text-sm text-gray-600 mb-1">To</label>
+            <label htmlFor="endDate" className="text-sm text-gray-600 mb-1">
+              To
+            </label>
             <input
               id="endDate"
               type="date"
@@ -150,19 +160,31 @@ const Sales = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="text-sm text-blue-600 font-medium">Total Sales</h3>
-            <p className="text-xl sm:text-2xl font-bold">₹{analytics.totalSales.toFixed(2)}</p>
+            <p className="text-xl sm:text-2xl font-bold">
+              ₹{analytics.totalSales.toFixed(2)}
+            </p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
             <h3 className="text-sm text-green-600 font-medium">Total Bills</h3>
-            <p className="text-xl sm:text-2xl font-bold">{analytics.totalBills}</p>
+            <p className="text-xl sm:text-2xl font-bold">
+              {analytics.totalBills}
+            </p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
-            <h3 className="text-sm text-purple-600 font-medium">Average Bill Amount</h3>
-            <p className="text-xl sm:text-2xl font-bold">₹{analytics.averageBillAmount}</p>
+            <h3 className="text-sm text-purple-600 font-medium">
+              Average Bill Amount
+            </h3>
+            <p className="text-xl sm:text-2xl font-bold">
+              ₹{analytics.averageBillAmount}
+            </p>
           </div>
           <div className="bg-orange-50 p-4 rounded-lg">
-            <h3 className="text-sm text-orange-600 font-medium">Total Inventory Sold</h3>
-            <p className="text-xl sm:text-2xl font-bold">{analytics.itemsSold}</p>
+            <h3 className="text-sm text-orange-600 font-medium">
+              Total Inventory Sold
+            </h3>
+            <p className="text-xl sm:text-2xl font-bold">
+              {analytics.itemsSold}
+            </p>
           </div>
         </div>
 
@@ -172,21 +194,35 @@ const Sales = () => {
             <table className="min-w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Items
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-4">Loading...</td>
+                    <td colSpan="5" className="text-center py-4">
+                      Loading...
+                    </td>
                   </tr>
                 ) : filteredBills.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-4">No bills found</td>
+                    <td colSpan="5" className="text-center py-4">
+                      No bills found
+                    </td>
                   </tr>
                 ) : (
                   filteredBills.map((bill) => (
@@ -195,8 +231,12 @@ const Sales = () => {
                         {new Date(bill.date).toLocaleDateString()}
                       </td>
                       <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium">{bill.customerName}</div>
-                        <div className="text-sm text-gray-500">{bill.customerMobile}</div>
+                        <div className="text-sm font-medium">
+                          {bill.customerName}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {bill.customerMobile}
+                        </div>
                       </td>
                       <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
                         {bill.items.length} items
@@ -234,46 +274,71 @@ const Sales = () => {
                 ✕
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-500">Customer Details</p>
                 <p className="font-medium">{selectedBill.customerName}</p>
                 <p className="text-gray-600">{selectedBill.customerMobile}</p>
               </div>
-              
+
               <div className="overflow-x-auto -mx-4 sm:mx-0">
                 <div className="inline-block min-w-full align-middle">
-                  <p className="text-sm text-gray-500 mb-2 px-4 sm:px-0">Items</p>
+                  <p className="text-sm text-gray-500 mb-2 px-4 sm:px-0">
+                    Items
+                  </p>
                   <table className="min-w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">Item</th>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">Qty</th>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">Price</th>
-                        <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">Total</th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">
+                          Item
+                        </th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">
+                          Qty
+                        </th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">
+                          Price
+                        </th>
+                        <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">
+                          Total
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {selectedBill.items.map((item, index) => (
                         <tr key={index}>
-                          <td className="px-3 sm:px-4 py-2 text-sm">{item.name}</td>
-                          <td className="px-3 sm:px-4 py-2 text-sm">{item.quantity}</td>
-                          <td className="px-3 sm:px-4 py-2 text-sm">₹{item.price.toFixed(2)}</td>
-                          <td className="px-3 sm:px-4 py-2 text-sm">₹{(item.price * item.quantity).toFixed(2)}</td>
+                          <td className="px-3 sm:px-4 py-2 text-sm">
+                            {item.name}
+                          </td>
+                          <td className="px-3 sm:px-4 py-2 text-sm">
+                            {item.quantity}
+                          </td>
+                          <td className="px-3 sm:px-4 py-2 text-sm">
+                            ₹{item.price.toFixed(2)}
+                          </td>
+                          <td className="px-3 sm:px-4 py-2 text-sm">
+                            ₹{(item.price * item.quantity).toFixed(2)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot className="bg-gray-50">
                       <tr>
-                        <td colSpan="3" className="px-3 sm:px-4 py-2 text-sm font-medium text-right">Total Amount:</td>
-                        <td className="px-3 sm:px-4 py-2 text-sm font-medium">₹{selectedBill.totalAmount.toFixed(2)}</td>
+                        <td
+                          colSpan="3"
+                          className="px-3 sm:px-4 py-2 text-sm font-medium text-right"
+                        >
+                          Total Amount:
+                        </td>
+                        <td className="px-3 sm:px-4 py-2 text-sm font-medium">
+                          ₹{selectedBill.totalAmount.toFixed(2)}
+                        </td>
                       </tr>
                     </tfoot>
                   </table>
                 </div>
               </div>
-              
+
               <div className="text-sm text-gray-500 px-4 sm:px-0">
                 Bill Date: {new Date(selectedBill.date).toLocaleString()}
               </div>

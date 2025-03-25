@@ -154,7 +154,7 @@ const Inventory = () => {
                 <th className="py-2 px-3 sm:px-4 border-b text-left">Name</th>
                 <th className="py-2 px-3 sm:px-4 border-b text-left hidden sm:table-cell">Description</th>
                 <th className="py-2 px-3 sm:px-4 border-b text-right">Qty</th>
-                <th className="py-2 px-3 sm:px-4 border-b text-right">Price</th>
+                <th className="py-2 px-3 sm:px-4 border-b text-right">Price (LKR)</th>
                 <th className="py-2 px-3 sm:px-4 border-b text-center">Actions</th>
               </tr>
             </thead>
@@ -167,7 +167,7 @@ const Inventory = () => {
                   </td>
                   <td className="py-2 px-3 sm:px-4 border-b hidden sm:table-cell">{item.description}</td>
                   <td className="py-2 px-3 sm:px-4 border-b text-right">{item.quantity}</td>
-                  <td className="py-2 px-3 sm:px-4 border-b text-right">₹{item.price}</td>
+                  <td className="py-2 px-3 sm:px-4 border-b text-right">{item.price}</td>
                   <td className="py-2 px-3 sm:px-4 border-b">
                     <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
                       <button
