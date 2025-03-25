@@ -25,10 +25,10 @@ const Footer = () => {
                 />
               </svg>
             </div>
-            <span className="text-2xl font-bold text-gray-900">Toastify</span>
+            <span className="text-2xl font-bold text-gray-900">BillVentory</span>
           </div>
           <p className="text-gray-600 leading-7">
-            Toastify connects you with top healthcare professionals for seamless
+            BillVentory connects you with top healthcare professionals for seamless
             appointment bookings. Simplify your healthcare journey today.
           </p>
         </div>
@@ -64,7 +64,7 @@ const Footer = () => {
       <div className="relative mt-16">
         <hr className="border-gray-300" />
         <p className="py-5 text-sm text-gray-600 text-center">
-          © 2024 Toastify. All Rights Reserved.
+          © 2024 BillVentory. All Rights Reserved.
         </p>
       </div>
     </div>
