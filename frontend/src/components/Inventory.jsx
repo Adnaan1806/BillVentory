@@ -146,7 +146,7 @@ const Inventory = () => {
               <th className="py-2 px-4 border-b text-left">Name</th>
               <th className="py-2 px-4 border-b text-left">Description</th>
               <th className="py-2 px-4 border-b text-right">Quantity</th>
-              <th className="py-2 px-4 border-b text-right">Price</th>
+              <th className="py-2 px-4 border-b text-right">Price (LKR)</th>
               <th className="py-2 px-4 border-b text-center">Actions</th>
             </tr>
           </thead>
@@ -156,17 +156,17 @@ const Inventory = () => {
                 <td className="py-2 px-4 border-b">{item.name}</td>
                 <td className="py-2 px-4 border-b">{item.description}</td>
                 <td className="py-2 px-4 border-b text-right">{item.quantity}</td>
-                <td className="py-2 px-4 border-b text-right">${item.price}</td>
+                <td className="py-2 px-4 border-b text-right">{item.price}</td>
                 <td className="py-2 px-4 border-b text-center">
                   <button
                     onClick={() => handleEditClick(item)}
-                    className="text-blue-500 hover:text-blue-700 mr-2"
+                    className="text-white bg-yellow-700 py-1 px-4 mr-2 rounded-md hover:bg-yellow-600 transition-all duration-300"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteItem(item._id)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-white bg-red-500 py-1 px-2 rounded-md hover:bg-red-600 transition-all duration-300"
                   >
                     Delete
                   </button>
