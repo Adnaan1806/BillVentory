@@ -159,9 +159,9 @@ const Sales = () => {
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="text-sm text-blue-600 font-medium">Total Sales</h3>
+            <h3 className="text-sm text-blue-600 font-medium">Total Sales (LKR)</h3>
             <p className="text-xl sm:text-2xl font-bold">
-              ₹{analytics.totalSales.toFixed(2)}
+              {analytics.totalSales.toFixed(2)}
             </p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
@@ -172,10 +172,10 @@ const Sales = () => {
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
             <h3 className="text-sm text-purple-600 font-medium">
-              Average Bill Amount
+              Average Bill Amount (LKR)
             </h3>
             <p className="text-xl sm:text-2xl font-bold">
-              ₹{analytics.averageBillAmount}
+              {analytics.averageBillAmount}
             </p>
           </div>
           <div className="bg-orange-50 p-4 rounded-lg">
@@ -204,7 +204,7 @@ const Sales = () => {
                     Items
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
+                    Total (LKR)
                   </th>
                   <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -242,7 +242,7 @@ const Sales = () => {
                         {bill.items.length} items
                       </td>
                       <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        ₹{bill.totalAmount.toFixed(2)}
+                        {bill.totalAmount.toFixed(2)}
                       </td>
                       <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
                         <button
@@ -297,10 +297,10 @@ const Sales = () => {
                           Qty
                         </th>
                         <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">
-                          Price
+                          Price (LKR)
                         </th>
                         <th className="px-3 sm:px-4 py-2 text-left text-xs font-medium text-gray-500">
-                          Total
+                          Total (LKR)
                         </th>
                       </tr>
                     </thead>
@@ -314,10 +314,10 @@ const Sales = () => {
                             {item.quantity}
                           </td>
                           <td className="px-3 sm:px-4 py-2 text-sm">
-                            ₹{item.price.toFixed(2)}
+                            {item.price.toFixed(2)}
                           </td>
                           <td className="px-3 sm:px-4 py-2 text-sm">
-                            ₹{(item.price * item.quantity).toFixed(2)}
+                            {(item.price * item.quantity).toFixed(2)}
                           </td>
                         </tr>
                       ))}
@@ -328,10 +328,10 @@ const Sales = () => {
                           colSpan="3"
                           className="px-3 sm:px-4 py-2 text-sm font-medium text-right"
                         >
-                          Total Amount:
+                          Total Amount (LKR):
                         </td>
                         <td className="px-3 sm:px-4 py-2 text-sm font-medium">
-                          ₹{selectedBill.totalAmount.toFixed(2)}
+                          {selectedBill.totalAmount.toFixed(2)}
                         </td>
                       </tr>
                     </tfoot>
