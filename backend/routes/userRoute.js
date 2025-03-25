@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser,loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, createPaymentSession, updatePaymentStatus } from '../controllers/userController.js';
+import { registerUser, loginUser, getProfile, updateProfile, addInventory, getInventory, updateInventory, deleteInventory } from '../controllers/userController.js';
 import authUser from '../middlewares/authUser.js';
 import upload from '../middlewares/multer.js';
 
@@ -10,13 +10,9 @@ userRouter.post('/login', loginUser);
 
 userRouter.get('/get-profile', authUser, getProfile)
 userRouter.post('/update-profile', upload.single('image'), authUser, updateProfile)
-userRouter.post('/book-appointment', authUser, bookAppointment)
-userRouter.get('/appointments', authUser, listAppointment)
-userRouter.post('/cancel-appointment', authUser, cancelAppointment)
-
-//payment gateway
-userRouter.post("/create-payment-session", authUser, createPaymentSession);
-userRouter.post("/update-payment-status", authUser, updatePaymentStatus);
-
+userRouter.post('/add-inventory', authUser, addInventory)
+userRouter.get('/get-inventory', authUser, getInventory)
+userRouter.put('/update-inventory/:id', authUser, updateInventory)
+userRouter.delete('/delete-inventory/:id', authUser, deleteInventory)
 
 export default userRouter;

@@ -44,7 +44,6 @@ const Login = () => {
           setToken(data.token);
           toast.success("Logged in successfully!");
           navigate("/");
-
         } else {
           toast.error(data.message);
         }
