@@ -27,10 +27,10 @@ const Sales = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 rounded-lg shadow-xl">
-      <h1 className="text-3xl font-bold text-teal-600 text-center mb-8">Sales Page</h1>
+      <h1 className="text-3xl font-bold text-black text-center mb-8">Sales Page</h1>
       
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-teal-500 mb-4">Filter by Date</h2>
+        <h2 className="text-xl font-semibold text-black mb-4">Filter by Date</h2>
         <div className="flex gap-4 mb-6">
           <input
             type="date"
@@ -46,23 +46,23 @@ const Sales = () => {
           />
           <button
             onClick={handleFilter}
-            className="bg-teal-500 text-white py-2 px-6 rounded-md hover:bg-teal-600 transition duration-300">
+            className="bg-black text-white py-2 px-6 rounded-md hover:bg-teal-600 transition duration-300">
             Filter
           </button>
         </div>
       </div>
       
       <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold text-teal-500 mb-4">Sales Overview</h2>
+        <h2 className="text-xl font-semibold text-black mb-4">Sales Overview</h2>
         
         <div className="flex justify-between mb-4">
           <div className="text-lg font-semibold">Total Amount Earned:</div>
-          <div className="text-xl text-teal-600">${totalAmount}</div>
+          <div className="text-xl text-black">${totalAmount}</div>
         </div>
         
         <div className="flex justify-between mb-4">
           <div className="text-lg font-semibold">Total Items Sold:</div>
-          <div className="text-xl text-teal-600">{totalItemsSold}</div>
+          <div className="text-xl text-black">{totalItemsSold}</div>
         </div>
       </div>
     </div>
