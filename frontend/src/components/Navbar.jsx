@@ -40,7 +40,7 @@ const Navbar = () => {
           INVENTORY
         </NavLink>
         <NavLink
-          to="/doctors"
+          to="/billing"
           className={({ isActive }) =>
             isActive
               ? "text-primary border-b-2 border-customOrange"
@@ -50,7 +50,7 @@ const Navbar = () => {
           BILLING
         </NavLink>
         <NavLink
-          to="/about"
+          to="/sales"
           className={({ isActive }) =>
             isActive
               ? "text-primary border-b-2 border-customOrange"
@@ -115,16 +115,13 @@ const Navbar = () => {
           </div>
           <ul className="flex flex-col items-center gap-4 mt-5 px-5 text-lg font-medium">
             <NavLink onClick={() => setShowMenu(false)} to="/">
-              <p className="px-4 py-2 rounded inline-block">HOME</p>
+              <p className="px-4 py-2 rounded inline-block">INVENTORY</p>
             </NavLink>
-            <NavLink onClick={() => setShowMenu(false)} to="/doctors">
-              <p className="px-4 py-2 rounded inline-block">ALL DOCTORS</p>
+            <NavLink onClick={() => setShowMenu(false)} to="/billing">
+              <p className="px-4 py-2 rounded inline-block">BILLING</p>
             </NavLink>
-            <NavLink onClick={() => setShowMenu(false)} to="/about">
-              <p className="px-4 py-2 rounded inline-block">ABOUT</p>
-            </NavLink>
-            <NavLink onClick={() => setShowMenu(false)} to="/contact">
-              <p className="px-4 py-2 rounded inline-block">CONTACT</p>
+            <NavLink onClick={() => setShowMenu(false)} to="/sales">
+              <p className="px-4 py-2 rounded inline-block">SALES</p>
             </NavLink>
           </ul>
         </div>

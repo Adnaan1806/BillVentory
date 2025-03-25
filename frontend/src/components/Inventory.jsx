@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { FaArrowRight } from "react-icons/fa";
 import { useState } from "react";
 
-const SpecialtyMenu = () => {
+const Inventory = () => {
   const [items, setItems] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', description: '', quantity: '', price: '' });
@@ -125,4 +125,4 @@ const SpecialtyMenu = () => {
   );
 };
 
-export default SpecialtyMenu;
+export default Inventory;

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { FiSearch } from "react-icons/fi";
 
-const Doctors = () => {
+const Billing = () => {
   const [customerName, setCustomerName] = useState('');
   const [customerMobile, setCustomerMobile] = useState('');
   const [selectedItems, setSelectedItems] = useState([]);
@@ -102,4 +102,4 @@ const Doctors = () => {
   );
 };
 
-export default Doctors;
+export default Billing;

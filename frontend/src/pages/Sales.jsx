@@ -2,7 +2,7 @@ import React from "react";
 import { assets } from "../assets/assets";
 import { useState } from "react";
 
-const About = () => {
+const Sales = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [salesData, setSalesData] = useState([
@@ -69,4 +69,4 @@ const About = () => {
   );
 };
 
-export default About;
+export default Sales;

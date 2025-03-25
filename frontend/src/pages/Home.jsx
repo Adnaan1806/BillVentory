@@ -1,14 +1,10 @@
 import React from 'react'
-import Headers from '../components/Headers'
-import SpecialtyMenu from '../components/SpecialtyMenu'
-import TopDoctors from '../components/TopDoctors'
-import Banner from '../components/Banner'
+import Inventory from '../components/Inventory'
 
 const Home = () => {
   return (
     <div>
-        
-        <SpecialtyMenu />
+        <Inventory />
     </div>
   )
 }
