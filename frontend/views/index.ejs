@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Factor Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            margin: 10px 0;
+            color: #555;
+        }
+        img {
+            margin: 20px 0;
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+        }
+        label {
+            display: block;
+            margin: 20px 0 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <h1>Two Factor Authentication</h1>
+        <p>Scan the QR Code</p>
+        <img src="<%= qrCode %>" alt="QR Code">
+        <form action="/verify" method="post">
+            <input type="hidden" name="secret" value="<%= secret %>">
+            <label for="token">Enter OTP:</label>
+            <input type="text" id="token" name="token" required>
+            <button type="submit">Verify OTP</button>
+        </form>
+    </div>
+</body>
+</html>
