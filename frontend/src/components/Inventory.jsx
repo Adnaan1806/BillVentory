@@ -131,66 +131,74 @@ const Inventory = () => {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Inventory Items</h2>
+    <div className="p-2 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+        <h2 className="text-xl sm:text-2xl font-semibold">Inventory Items</h2>
         <button
           onClick={() => {
             setEditingItem(null);
             setNewItem({ name: '', description: '', quantity: '', price: '' });
             setIsPopupOpen(true);
           }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           Add Item
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b text-left">Name</th>
-              <th className="py-2 px-4 border-b text-left">Description</th>
-              <th className="py-2 px-4 border-b text-right">Quantity</th>
-              <th className="py-2 px-4 border-b text-right">Price (LKR)</th>
-              <th className="py-2 px-4 border-b text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item._id} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">{item.name}</td>
-                <td className="py-2 px-4 border-b">{item.description}</td>
-                <td className="py-2 px-4 border-b text-right">{item.quantity}</td>
-                <td className="py-2 px-4 border-b text-right">{item.price}</td>
-                <td className="py-2 px-4 border-b text-center">
-                  <button
-                    onClick={() => handleEditClick(item)}
-                    className="text-white bg-yellow-700 py-1 px-4 mr-2 rounded-md hover:bg-yellow-600 transition-all duration-300"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(item)}
-                    className="text-white bg-red-500 py-1 px-2 rounded-md hover:bg-red-600 transition-all duration-300"
-                  >
-                    Delete
-                  </button>
-                </td>
+      <div className="overflow-x-auto -mx-2 sm:mx-0">
+        <div className="inline-block min-w-full align-middle">
+          <table className="min-w-full bg-white border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-3 sm:px-4 border-b text-left">Name</th>
+                <th className="py-2 px-3 sm:px-4 border-b text-left hidden sm:table-cell">Description</th>
+                <th className="py-2 px-3 sm:px-4 border-b text-right">Qty</th>
+                <th className="py-2 px-3 sm:px-4 border-b text-right">Price</th>
+                <th className="py-2 px-3 sm:px-4 border-b text-center">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item._id} className="hover:bg-gray-50">
+                  <td className="py-2 px-3 sm:px-4 border-b">
+                    <div>{item.name}</div>
+                    <div className="text-sm text-gray-500 sm:hidden">{item.description}</div>
+                  </td>
+                  <td className="py-2 px-3 sm:px-4 border-b hidden sm:table-cell">{item.description}</td>
+                  <td className="py-2 px-3 sm:px-4 border-b text-right">{item.quantity}</td>
+                  <td className="py-2 px-3 sm:px-4 border-b text-right">₹{item.price}</td>
+                  <td className="py-2 px-3 sm:px-4 border-b">
+                    <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
+                      <button
+                        onClick={() => handleEditClick(item)}
+                        className="w-full sm:w-auto text-white bg-yellow-700 py-1 px-4 rounded-md hover:bg-yellow-600 transition-all duration-300 text-sm"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(item)}
+                        className="w-full sm:w-auto text-white bg-red-500 py-1 px-2 rounded-md hover:bg-red-600 transition-all duration-300 text-sm"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
+      {/* Add/Edit Modal */}
       {isPopupOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-[600px]">
-            <h3 className="text-xl font-semibold mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-4 sm:p-6 rounded-lg w-full max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg sm:text-xl font-semibold mb-4">
               {editingItem ? 'Edit Item' : 'Add New Item'}
             </h3>
-            <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <input
@@ -226,7 +234,7 @@ const Inventory = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Price</label>
+                <label className="block text-sm font-medium text-gray-700">Price (LKR)</label>
                 <input
                   type="number"
                   name="price"
@@ -238,20 +246,20 @@ const Inventory = () => {
                   step="0.01"
                 />
               </div>
-              <div className="col-span-2 flex justify-end gap-4 mt-4">
+              <div className="col-span-1 sm:col-span-2 flex flex-col sm:flex-row justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => {
                     setIsPopupOpen(false);
                     setEditingItem(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="w-full sm:w-auto px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  className="w-full sm:w-auto px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600"
                 >
                   {editingItem ? 'Update' : 'Add'}
                 </button>
@@ -261,26 +269,22 @@ const Inventory = () => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-[400px]">
-            <h3 className="text-xl font-semibold mb-4">Delete Item</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete "{itemToDelete?.name}"? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-4 sm:p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-lg sm:text-xl font-semibold mb-4">Delete Item</h3>
+            <p className="mb-4">Are you sure you want to delete {itemToDelete?.name}?</p>
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
               <button
-                onClick={() => {
-                  setIsDeleteModalOpen(false);
-                  setItemToDelete(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="w-full sm:w-auto px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                className="w-full sm:w-auto px-4 py-2 text-white bg-red-500 rounded-md hover:bg-red-600"
               >
                 Delete
               </button>
