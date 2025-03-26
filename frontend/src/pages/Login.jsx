@@ -12,9 +12,11 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    setErrorMessage("");
 
     try {
       const { data } = await axios.post(backendUrl + "/api/user/login", {
@@ -27,9 +29,15 @@ const Login = () => {
         toast.success("Logged in successfully!");
         navigate("/");
       } else {
+        setErrorMessage(data.message);
         toast.error(data.message);
       }
     } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setErrorMessage("User does not exist. Please contact your administrator.");
+      } else {
+        setErrorMessage("Invalid email or password. Please try again.");
+      }
       toast.error(error.message);
     }
   };
@@ -99,6 +107,12 @@ const Login = () => {
         >
           Login
         </button>
+
+        {errorMessage && (
+          <p className="w-full text-center text-sm text-red-500">
+            {errorMessage}
+          </p>
+        )}
 
         <p className="w-full text-center text-sm text-gray-500 mt-2">
           Contact your administrator to create an account
