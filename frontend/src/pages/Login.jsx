@@ -27,6 +27,7 @@ const Login = () => {
         localStorage.setItem("token", data.token);
         setToken(data.token);
         toast.success("Logged in successfully!");
+        navigate("/");
       } else {
         setErrorMessage(data.message);
         toast.error(data.message);

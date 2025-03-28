@@ -10,20 +10,18 @@ import Sales from './pages/Sales'
 import { AppContext } from './context/AppContext'
 
 const App = () => {
-  const location = useLocation();
   const { token } = useContext(AppContext);
-  const isLoginPage = location.pathname === '/login';
 
   return (
     <div className='mx-4 sm:mx-[10%]'>
       <Toaster position="top-center" />
-      {!isLoginPage && <Navbar />}
+      {token && <Navbar />}
       <Routes>
-        <Route path='/' element={token ? <Home /> : <Navigate to="/login" replace />} />
-        <Route path='/login' element={token ? <Navigate to="/" replace /> : <Login />} />
-        <Route path='/billing' element={token ? <Billing /> : <Navigate to="/login" replace />} />
-        <Route path='/my-profile' element={token ? <MyProfile /> : <Navigate to="/login" replace />} />
-        <Route path='/sales' element={token ? <Sales /> : <Navigate to="/login" replace />} />
+      <Route path='/' element={<Home />} />
+        <Route path='/billing' element={<Billing />} />
+        <Route path='/login' element={<Login />} />
+        <Route path='/my-profile' element={<MyProfile />} />
+        <Route path='/sales' element={<Sales />} />
       </Routes>
     </div>
   )
