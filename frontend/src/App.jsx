@@ -9,51 +9,21 @@ import Billing from './pages/Billing'
 import Sales from './pages/Sales'
 import { AppContext } from './context/AppContext'
 
-const ProtectedRoute = ({ children }) => {
-  const { token } = useContext(AppContext);
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-};
-
 const App = () => {
   const location = useLocation();
   const { token } = useContext(AppContext);
   const isLoginPage = location.pathname === '/login';
-
-  // Redirect to home if already logged in and trying to access login page
-  if (token && isLoginPage) {
-    return <Navigate to="/home" replace />;
-  }
 
   return (
     <div className='mx-4 sm:mx-[10%]'>
       <Toaster position="top-center" />
       {!isLoginPage && <Navbar />}
       <Routes>
-        <Route path='/' element={<Navigate to="/login" replace />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/home' element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        } />
-        <Route path='/billing' element={
-          <ProtectedRoute>
-            <Billing />
-          </ProtectedRoute>
-        } />
-        <Route path='/my-profile' element={
-          <ProtectedRoute>
-            <MyProfile />
-          </ProtectedRoute>
-        } />
-        <Route path='/sales' element={
-          <ProtectedRoute>
-            <Sales />
-          </ProtectedRoute>
-        } />
+        <Route path='/' element={token ? <Home /> : <Navigate to="/login" replace />} />
+        <Route path='/login' element={token ? <Navigate to="/" replace /> : <Login />} />
+        <Route path='/billing' element={token ? <Billing /> : <Navigate to="/login" replace />} />
+        <Route path='/my-profile' element={token ? <MyProfile /> : <Navigate to="/login" replace />} />
+        <Route path='/sales' element={token ? <Sales /> : <Navigate to="/login" replace />} />
       </Routes>
     </div>
   )
