@@ -17,11 +17,11 @@ const App = () => {
       <Toaster position="top-center" />
       {token && <Navbar />}
       <Routes>
-      <Route path='/' element={<Home />} />
-        <Route path='/billing' element={<Billing />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/my-profile' element={<MyProfile />} />
-        <Route path='/sales' element={<Sales />} />
+        <Route path='/' element={<Login />} />
+        <Route path='/home' element={token ? <Home /> : <Navigate to="/" replace />} />
+        <Route path='/billing' element={token ? <Billing /> : <Navigate to="/" replace />} />
+        <Route path='/my-profile' element={token ? <MyProfile /> : <Navigate to="/" replace />} />
+        <Route path='/sales' element={token ? <Sales /> : <Navigate to="/" replace />} />
       </Routes>
     </div>
   )
