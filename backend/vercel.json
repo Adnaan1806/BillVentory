@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "install": "npm install",
   "builds": [
     {
       "src": "server.js",
