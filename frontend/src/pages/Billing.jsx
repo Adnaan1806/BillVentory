@@ -127,6 +127,63 @@ const Billing = () => {
     0
   );
 
+  const printBill = (billData) => {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Bill - ${billData.customerName}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .customer-info { margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            .total { text-align: right; font-weight: bold; }
+            @media print {
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>BillVentory</h1>
+            <p>Bill Date: ${new Date().toLocaleString()}</p>
+          </div>
+          <div class="customer-info">
+            <p><strong>Customer Name:</strong> ${billData.customerName}</p>
+            <p><strong>Mobile:</strong> ${billData.customerMobile}</p>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price(LKR)</th>
+                <th>Total(LKR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${billData.items.map(item => `
+                <tr>
+                  <td>${item.name}</td>
+                  <td>${item.quantity}</td>
+                  <td>${item.price}</td>
+                  <td>${item.price * item.quantity}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div class="total">
+            <p>Total Amount: ₹${billData.items.reduce((total, item) => total + (item.price * item.quantity), 0)}</p>
+          </div>
+          <button onclick="window.print()" style="padding: 10px 20px; margin-top: 20px;">Print Bill</button>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const handleCreateBill = async () => {
     if (!customerName || !customerMobile) {
       toast.error("Please enter customer details");
@@ -149,16 +206,24 @@ const Billing = () => {
           customerName,
           customerMobile,
           items: selectedItems,
+          totalAmount,
         },
         { headers: { token } }
       );
 
       if (response.data.success) {
         toast.success("Bill created successfully");
+        // Print the bill
+        printBill({
+          customerName,
+          customerMobile,
+          items: selectedItems,
+        });
+        // Reset form
         setCustomerName("");
         setCustomerMobile("");
         setSelectedItems([]);
-        fetchInventoryItems(); // Refresh inventory
+        fetchInventoryItems();
       } else {
         toast.error(response.data.message);
       }

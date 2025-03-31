@@ -10,7 +10,7 @@ const Navbar = () => {
   const logout = () => {
     setToken(false);
     localStorage.removeItem("token");
-    navigate("/login");
+    navigate("/");
   };
 
   const [showMenu, setShowMenu] = useState(false);
@@ -19,7 +19,7 @@ const Navbar = () => {
     <div className="flex items-center justify-between text-sm py-4 mb-5 border-b border-gray-300">
       {/* Logo */}
       <div
-        onClick={() => navigate("/")}
+        onClick={() => navigate("/home")}
         className="cursor-pointer flex items-center gap-2"
       >
         <h1 className="text-3xl font-extrabold tracking-wide">
@@ -31,7 +31,7 @@ const Navbar = () => {
       {/* Desktop Navigation */}
       <ul className="hidden md:flex items-center gap-8 font-medium">
         <NavLink
-          to="/"
+          to="/home"
           className={({ isActive }) =>
             isActive
               ? "text-primary border-b-2 border-customOrange"
@@ -76,7 +76,7 @@ const Navbar = () => {
                 >
                   My Profile
                 </p>
-              
+
                 <p onClick={logout} className="hover:text-black cursor-pointer">
                   Logout
                 </p>
@@ -115,7 +115,7 @@ const Navbar = () => {
             />
           </div>
           <ul className="flex flex-col items-center gap-4 mt-5 px-5 text-lg font-medium">
-            <NavLink onClick={() => setShowMenu(false)} to="/">
+            <NavLink onClick={() => setShowMenu(false)} to="/home">
               <p className="px-4 py-2 rounded inline-block">INVENTORY</p>
             </NavLink>
             <NavLink onClick={() => setShowMenu(false)} to="/billing">
