@@ -8,7 +8,7 @@ import userRouter from "./routes/userRoute.js";
 
 //app config
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 10000;
 connectDB(); //connect to MongoDB
 connectCloudinary(); //connect to Cloudinary
 
