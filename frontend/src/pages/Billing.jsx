@@ -128,20 +128,65 @@ const Billing = () => {
   );
 
   const printBill = (billData) => {
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Bill - ${billData.customerName}</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .customer-info { margin-bottom: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            .total { text-align: right; font-weight: bold; }
+            body { 
+              font-family: Arial, sans-serif; 
+              padding: 15px; 
+              margin: 0;
+              box-sizing: border-box;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 15px;
+              padding: 10px;
+            }
+            .customer-info { 
+              margin-bottom: 15px;
+              padding: 10px;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              margin-bottom: 15px;
+              font-size: 14px;
+            }
+            th, td { 
+              border: 1px solid #ddd; 
+              padding: 8px; 
+              text-align: left;
+            }
+            th { background-color: #f5f5f5; }
+            .total { 
+              text-align: right; 
+              font-weight: bold;
+              padding: 10px;
+              margin-top: 10px;
+            }
+            button {
+              width: 100%;
+              padding: 12px;
+              background-color: #4CAF50;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 16px;
+              margin-top: 20px;
+            }
+            button:hover {
+              background-color: #45a049;
+            }
             @media print {
               button { display: none; }
+              body { font-size: 12px; }
+              table { font-size: 12px; }
             }
           </style>
         </head>
@@ -175,13 +220,19 @@ const Billing = () => {
             </tbody>
           </table>
           <div class="total">
-            <p>Total Amount: ₹${billData.items.reduce((total, item) => total + (item.price * item.quantity), 0)}</p>
+            <p>Total Amount: LKR ${billData.items.reduce((total, item) => total + (item.price * item.quantity), 0)}</p>
           </div>
-          <button onclick="window.print()" style="padding: 10px 20px; margin-top: 20px;">Print Bill</button>
+          <button onclick="window.print()">Print Bill</button>
         </body>
       </html>
     `);
     printWindow.document.close();
+
+    // Focus and print automatically on mobile
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 500);
   };
 
   const handleCreateBill = async () => {
