@@ -1,5 +1,5 @@
 import validator from "validator";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import userModel from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary } from "cloudinary";
@@ -162,7 +162,11 @@ const addInventory = async (req, res) => {
 
     await newItem.save();
 
-    res.json({ success: true, message: "Inventory item added successfully", newItem });
+    res.json({
+      success: true,
+      message: "Inventory item added successfully",
+      newItem,
+    });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -206,7 +210,11 @@ const updateInventory = async (req, res) => {
       return res.json({ success: false, message: "Item not found" });
     }
 
-    res.json({ success: true, message: "Item updated successfully", updatedItem });
+    res.json({
+      success: true,
+      message: "Item updated successfully",
+      updatedItem,
+    });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
@@ -235,7 +243,10 @@ const createBill = async (req, res) => {
 
     // Validate input
     if (!customerName || !customerMobile || !items || items.length === 0) {
-      return res.json({ success: false, message: "Please provide all required fields" });
+      return res.json({
+        success: false,
+        message: "Please provide all required fields",
+      });
     }
 
     // Calculate total amount and update inventory
@@ -243,18 +254,24 @@ const createBill = async (req, res) => {
     for (const item of items) {
       const inventoryItem = await Inventory.findById(item.itemId);
       if (!inventoryItem) {
-        return res.json({ success: false, message: `Item ${item.name} not found in inventory` });
+        return res.json({
+          success: false,
+          message: `Item ${item.name} not found in inventory`,
+        });
       }
       if (inventoryItem.quantity < item.quantity) {
-        return res.json({ success: false, message: `Insufficient stock for ${item.name}` });
+        return res.json({
+          success: false,
+          message: `Insufficient stock for ${item.name}`,
+        });
       }
-      
+
       // Update inventory quantity using updateOne to skip validation
       await Inventory.updateOne(
         { _id: item.itemId },
         { $inc: { quantity: -item.quantity } }
       );
-      
+
       totalAmount += item.price * item.quantity;
     }
 
@@ -268,10 +285,10 @@ const createBill = async (req, res) => {
 
     await newBill.save();
 
-    res.json({ 
-      success: true, 
-      message: "Bill created successfully", 
-      bill: newBill 
+    res.json({
+      success: true,
+      message: "Bill created successfully",
+      bill: newBill,
     });
   } catch (error) {
     console.log(error);
@@ -293,7 +310,7 @@ const getBillById = async (req, res) => {
   try {
     const { id } = req.params;
     const bill = await Billing.findById(id);
-    
+
     if (!bill) {
       return res.json({ success: false, message: "Bill not found" });
     }
@@ -305,16 +322,16 @@ const getBillById = async (req, res) => {
   }
 };
 
-export { 
-  registerUser, 
-  loginUser, 
-  getProfile, 
-  updateProfile, 
-  addInventory, 
-  getInventory, 
-  updateInventory, 
+export {
+  registerUser,
+  loginUser,
+  getProfile,
+  updateProfile,
+  addInventory,
+  getInventory,
+  updateInventory,
   deleteInventory,
   createBill,
   getBills,
-  getBillById 
+  getBillById,
 };
