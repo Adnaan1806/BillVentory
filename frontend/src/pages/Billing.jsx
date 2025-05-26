@@ -20,12 +20,12 @@ const Billing = () => {
   const validateMobileNumber = (number) => {
     // Allow empty string during typing
     if (number === "") return true;
-    
+
     // Check if it starts with + and has 12 digits
     if (number.startsWith("+")) {
       return /^\+\d{11}$/.test(number);
     }
-    
+
     // Check if it has exactly 10 digits
     return /^\d{10}$/.test(number);
   };
@@ -33,17 +33,17 @@ const Billing = () => {
   // Handle mobile number change
   const handleMobileChange = (e) => {
     const number = e.target.value;
-    
+
     // Only allow digits and + at the start
     if (!/^[+\d]*$/.test(number)) return;
-    
+
     // If + is present, it must be at the start
     if (number.includes("+") && number[0] !== "+") return;
-    
+
     // Limit length based on whether it starts with +
     if (number.startsWith("+") && number.length > 12) return;
     if (!number.startsWith("+") && number.length > 10) return;
-    
+
     setCustomerMobile(number);
   };
 
@@ -54,11 +54,9 @@ const Billing = () => {
 
   const fetchInventoryItems = async () => {
     try {
-
-      const response = await axios.get(
-        backendUrl + "/api/user/get-inventory",
-        { headers: { token } }
-      );
+      const response = await axios.get(backendUrl + "/api/user/get-inventory", {
+        headers: { token },
+      });
 
       if (response.data.success) {
         setInventoryItems(response.data.items);
@@ -134,60 +132,288 @@ const Billing = () => {
       return;
     }
 
-    const printWindow = window.open('', '_blank');
+    const currentDate = new Date();
+    const billId = billData._id || `INV-${Date.now()}`;
+    
+    const printWindow = window.open("", "_blank");
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Bill - ${billData.customerName}</title>
+          <title>Receipt - ${billData.customerName}</title>
+          <meta charset="UTF-8">
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .customer-info { margin-bottom: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            .total { text-align: right; font-weight: bold; }
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            @page {
+              size: 80mm auto;
+              margin: 2mm;
+            }
+            
+            body {
+              font-family: 'Courier New', monospace;
+              font-size: 11px;
+              line-height: 1.3;
+              color: #000;
+              background: white;
+              width: 76mm;
+              margin: 0 auto;
+              padding: 2mm;
+            }
+            
+            .receipt-container {
+              width: 100%;
+            }
+            
+            .header {
+              text-align: center;
+              margin-bottom: 8px;
+              padding-bottom: 8px;
+              border-bottom: 1px dashed #000;
+            }
+            
+            .company-name {
+              font-size: 16px;
+              font-weight: bold;
+              margin-bottom: 2px;
+            }
+            
+            .company-tagline {
+              font-size: 9px;
+              margin-bottom: 6px;
+            }
+            
+            .receipt-title {
+              font-size: 12px;
+              font-weight: bold;
+              margin-bottom: 4px;
+            }
+            
+            .receipt-info {
+              text-align: center;
+              margin-bottom: 8px;
+              font-size: 10px;
+            }
+            
+            .customer-section {
+              margin-bottom: 8px;
+              padding-bottom: 6px;
+              border-bottom: 1px dashed #000;
+            }
+            
+            .customer-label {
+              font-weight: bold;
+              font-size: 10px;
+            }
+            
+            .customer-value {
+              font-size: 10px;
+              margin-bottom: 2px;
+            }
+            
+            .items-section {
+              margin-bottom: 8px;
+            }
+            
+            .items-header {
+              border-top: 1px solid #000;
+              border-bottom: 1px solid #000;
+              padding: 3px 0;
+              font-weight: bold;
+              font-size: 10px;
+            }
+            
+            .item-row {
+              padding: 2px 0;
+              border-bottom: 1px dotted #ccc;
+              font-size: 10px;
+            }
+            
+            .item-name {
+              font-weight: bold;
+              margin-bottom: 1px;
+            }
+            
+            .item-details {
+              display: flex;
+              justify-content: space-between;
+              font-size: 9px;
+            }
+            
+            .total-section {
+              margin-top: 8px;
+              padding-top: 6px;
+              border-top: 1px dashed #000;
+            }
+            
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 3px;
+              font-size: 10px;
+            }
+            
+            .total-row.final {
+              font-size: 12px;
+              font-weight: bold;
+              border-top: 1px solid #000;
+              padding-top: 4px;
+              margin-top: 6px;
+            }
+            
+            .footer {
+              margin-top: 10px;
+              padding-top: 8px;
+              border-top: 1px dashed #000;
+              text-align: center;
+              font-size: 9px;
+            }
+            
+            .thank-you {
+              font-size: 11px;
+              font-weight: bold;
+              margin-bottom: 4px;
+            }
+            
+            .print-button {
+              display: block;
+              margin: 15px auto;
+              padding: 8px 16px;
+              background-color: #000;
+              color: white;
+              border: none;
+              border-radius: 3px;
+              cursor: pointer;
+              font-size: 12px;
+            }
+            
+            .print-button:hover {
+              background-color: #333;
+            }
+            
+            .divider {
+              text-align: center;
+              margin: 6px 0;
+              font-size: 10px;
+            }
+            
             @media print {
-              button { display: none; }
+              .print-button {
+                display: none !important;
+              }
+              
+              body {
+                width: 80mm;
+                margin: 0;
+                padding: 2mm;
+                font-size: 11px;
+              }
+              
+              @page {
+                size: 80mm auto;
+                margin: 0;
+              }
             }
           </style>
         </head>
         <body>
-          <div class="header">
-            <h1>BillVentory</h1>
-            <p>Bill Date: ${new Date().toLocaleString()}</p>
+          <div class="receipt-container">
+            <!-- Header -->
+            <div class="header">
+              <div class="company-name">BillVentory</div>
+              <div class="company-tagline">Inventory Management System</div>
+              <div class="receipt-title">SALES RECEIPT</div>
+            </div>
+            
+            <!-- Receipt Info -->
+            <div class="receipt-info">
+              <div>Receipt No: ${billId}</div>
+              <div>Date: ${currentDate.toLocaleDateString()}</div>
+              <div>Time: ${currentDate.toLocaleTimeString()}</div>
+            </div>
+            
+            <!-- Customer Details -->
+            <div class="customer-section">
+              <div class="customer-label">CUSTOMER DETAILS:</div>
+              <div class="customer-value">Name: ${billData.customerName}</div>
+              <div class="customer-value">Mobile: ${billData.customerMobile}</div>
+            </div>
+            
+            <!-- Items Section -->
+            <div class="items-section">
+              <div class="items-header">
+                <div style="display: flex; justify-content: space-between;">
+                  <span>ITEM</span>
+                  <span>QTY x PRICE = TOTAL</span>
+                </div>
+              </div>
+              
+              ${billData.items
+                .map(
+                  (item) => `
+                  <div class="item-row">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-details">
+                      <span>${item.quantity} x ${item.price.toFixed(2)}</span>
+                      <span>LKR ${(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                  </div>
+                `
+                )
+                .join("")}
+            </div>
+            
+            <!-- Total Section -->
+            <div class="total-section">
+              <div class="total-row">
+                <span>Subtotal:</span>
+                <span>LKR ${billData.items.reduce(
+                  (total, item) => total + item.price * item.quantity,
+                  0
+                ).toFixed(2)}</span>
+              </div>
+              <div class="total-row">
+                <span>Tax (0%):</span>
+                <span>LKR 0.00</span>
+              </div>
+              <div class="total-row">
+                <span>Discount:</span>
+                <span>LKR 0.00</span>
+              </div>
+              <div class="total-row final">
+                <span>TOTAL:</span>
+                <span>LKR ${billData.items.reduce(
+                  (total, item) => total + item.price * item.quantity,
+                  0
+                ).toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+              <div class="thank-you">Thank you for your purchasing!</div>
+              <div class="divider">================================</div>
+              <div>Visit us again</div>
+              <div>Contact: +94 XX XXX XXXX</div>
+            </div>
+            
+            <!-- Print Button -->
+            <button class="print-button" onclick="window.print()">Print Receipt</button>
           </div>
-          <div class="customer-info">
-            <p><strong>Customer Name:</strong> ${billData.customerName}</p>
-            <p><strong>Mobile:</strong> ${billData.customerMobile}</p>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Quantity</th>
-                <th>Price(LKR)</th>
-                <th>Total(LKR)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${billData.items.map(item => `
-                <tr>
-                  <td>${item.name}</td>
-                  <td>${item.quantity}</td>
-                  <td>${item.price}</td>
-                  <td>${item.price * item.quantity}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <div class="total">
-            <p>Total Amount: LKR ${billData.items.reduce((total, item) => total + (item.price * item.quantity), 0)}</p>
-          </div>
-          <button onclick="window.print()" style="padding: 10px 20px; margin-top: 20px;">Print Bill</button>
         </body>
       </html>
     `);
+    
     printWindow.document.close();
+    
+    // Auto-focus and trigger print dialog after a short delay
+    setTimeout(() => {
+      printWindow.focus();
+    }, 250);
   };
 
   const handleCreateBill = async () => {
@@ -222,6 +448,7 @@ const Billing = () => {
         // Print the bill only on desktop
         if (window.innerWidth > 768) {
           printBill({
+            _id: response.data.billId || `INV-${Date.now()}`,
             customerName,
             customerMobile,
             items: selectedItems,
