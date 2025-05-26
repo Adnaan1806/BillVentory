@@ -395,7 +395,7 @@ const Billing = () => {
             
             <!-- Footer -->
             <div class="footer">
-              <div class="thank-you">Thank you for your purchasing!</div>
+              <div class="thank-you">Thank you for purchasing!</div>
               <div class="divider">================================</div>
               <div>Visit us again</div>
               <div>Contact: +94 XX XXX XXXX</div>
