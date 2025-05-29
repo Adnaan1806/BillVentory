@@ -6,7 +6,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const Billing = () => {
-  const { backendUrl, token } = useContext(AppContext);
+  const { backendUrl, token, userData } = useContext(AppContext);
   const navigate = useNavigate();
 
   const [customerName, setCustomerName] = useState("");
@@ -134,7 +134,7 @@ const Billing = () => {
 
     const currentDate = new Date();
     const billId = billData._id || `INV-${Date.now()}`;
-    
+
     const printWindow = window.open("", "_blank");
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -332,16 +332,30 @@ const Billing = () => {
             <!-- Receipt Info -->
             <div class="receipt-info">
               <div>Receipt No: ${billId}</div>
+              <div>Billed by: ${userData.name}</div>
               <div>Date: ${currentDate.toLocaleDateString()}</div>
               <div>Time: ${currentDate.toLocaleTimeString()}</div>
             </div>
             
             <!-- Customer Details -->
+            ${
+              billData.customerName || billData.customerMobile
+                ? `
             <div class="customer-section">
               <div class="customer-label">CUSTOMER DETAILS:</div>
-              <div class="customer-value">Name: ${billData.customerName}</div>
-              <div class="customer-value">Mobile: ${billData.customerMobile}</div>
-            </div>
+              ${
+                billData.customerName
+                  ? `<div class="customer-value">Name: ${billData.customerName}</div>`
+                  : ""
+              }
+              ${
+                billData.customerMobile
+                  ? `<div class="customer-value">Mobile: ${billData.customerMobile}</div>`
+                  : ""
+              }
+            </div>`
+                : ""
+            }
             
             <!-- Items Section -->
             <div class="items-section">
@@ -359,7 +373,9 @@ const Billing = () => {
                     <div class="item-name">${item.name}</div>
                     <div class="item-details">
                       <span>${item.quantity} x ${item.price.toFixed(2)}</span>
-                      <span>LKR ${(item.price * item.quantity).toFixed(2)}</span>
+                      <span>LKR ${(item.price * item.quantity).toFixed(
+                        2
+                      )}</span>
                     </div>
                   </div>
                 `
@@ -371,10 +387,12 @@ const Billing = () => {
             <div class="total-section">
               <div class="total-row">
                 <span>Subtotal:</span>
-                <span>LKR ${billData.items.reduce(
-                  (total, item) => total + item.price * item.quantity,
-                  0
-                ).toFixed(2)}</span>
+                <span>LKR ${billData.items
+                  .reduce(
+                    (total, item) => total + item.price * item.quantity,
+                    0
+                  )
+                  .toFixed(2)}</span>
               </div>
               <div class="total-row">
                 <span>Tax (0%):</span>
@@ -386,10 +404,12 @@ const Billing = () => {
               </div>
               <div class="total-row final">
                 <span>TOTAL:</span>
-                <span>LKR ${billData.items.reduce(
-                  (total, item) => total + item.price * item.quantity,
-                  0
-                ).toFixed(2)}</span>
+                <span>LKR ${billData.items
+                  .reduce(
+                    (total, item) => total + item.price * item.quantity,
+                    0
+                  )
+                  .toFixed(2)}</span>
               </div>
             </div>
             
@@ -407,9 +427,9 @@ const Billing = () => {
         </body>
       </html>
     `);
-    
+
     printWindow.document.close();
-    
+
     // Auto-focus and trigger print dialog after a short delay
     setTimeout(() => {
       printWindow.focus();
@@ -417,10 +437,6 @@ const Billing = () => {
   };
 
   const handleCreateBill = async () => {
-    if (!customerName || !customerMobile) {
-      toast.error("Please enter customer details");
-      return;
-    }
     if (!validateMobileNumber(customerMobile)) {
       toast.error("Please enter a valid mobile number");
       return;
@@ -471,7 +487,9 @@ const Billing = () => {
 
   const filteredItems = inventoryItems.filter(
     (item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.itemCode &&
+          item.itemCode.toLowerCase().includes(searchQuery.toLowerCase()))) &&
       item.quantity > 0
   );
 
@@ -516,7 +534,7 @@ const Billing = () => {
             <FiSearch className="absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search items..."
+              placeholder="Search items by Item code and Name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 p-2 border rounded"
@@ -524,26 +542,38 @@ const Billing = () => {
           </div>
 
           {/* Items List */}
-          <div className="h-96 overflow-y-auto border rounded">
-            {filteredItems.map((item) => (
-              <div
-                key={item._id}
-                className="flex items-center justify-between p-3 hover:bg-gray-50 border-b"
-              >
-                <div>
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-gray-600">
-                    Stock: {item.quantity} | Price: LKR {item.price}
-                  </p>
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-2">Available Items</h3>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {filteredItems.length > 0 ? (
+                filteredItems.map((item) => (
+                  <div
+                    key={item._id}
+                    className="flex justify-between items-center p-3 border rounded hover:bg-gray-50"
+                  >
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-gray-600">
+                        Item Code: {item.itemCode} | Stock: {item.quantity} |
+                        Price: LKR {item.price}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleAddItemToBill(item)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                    >
+                      <FiPlus />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  {searchQuery
+                    ? "No items found matching your search"
+                    : "No items available"}
                 </div>
-                <button
-                  onClick={() => handleAddItemToBill(item)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                >
-                  <FiPlus />
-                </button>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
         </div>
 

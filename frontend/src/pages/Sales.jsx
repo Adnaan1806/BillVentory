@@ -276,11 +276,13 @@ const Sales = () => {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-500">Customer Details</p>
-                <p className="font-medium">{selectedBill.customerName}</p>
-                <p className="text-gray-600">{selectedBill.customerMobile}</p>
-              </div>
+              {selectedBill.customerName || selectedBill.customerMobile ? (
+                <div>
+                  <p className="text-sm text-gray-500">Customer Details</p>
+                  <p className="font-medium">{selectedBill.customerName}</p>
+                  <p className="text-gray-600">{selectedBill.customerMobile}</p>
+                </div>
+              ) : null}
 
               <div className="overflow-x-auto -mx-4 sm:mx-0">
                 <div className="inline-block min-w-full align-middle">

@@ -9,7 +9,7 @@ const Inventory = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [newItem, setNewItem] = useState({ name: '', description: '', quantity: '', price: '' });
+  const [newItem, setNewItem] = useState({ name: '', description: '', quantity: '', price: '', itemCode: '' });
   const [editingItem, setEditingItem] = useState(null);
   const { backendUrl, token } = useContext(AppContext);
 
@@ -55,7 +55,7 @@ const Inventory = () => {
       if (data.success) {
         toast.success(data.message);
         setItems([...items, data.newItem]);
-        setNewItem({ name: '', description: '', quantity: '', price: '' });
+        setNewItem({ name: '', description: '', quantity: '', price: '', itemCode: '' });
         setIsPopupOpen(false);
       } else {
         toast.error(data.message);
@@ -137,7 +137,7 @@ const Inventory = () => {
         <button
           onClick={() => {
             setEditingItem(null);
-            setNewItem({ name: '', description: '', quantity: '', price: '' });
+            setNewItem({ name: '', description: '', quantity: '', price: '', itemCode: '' });
             setIsPopupOpen(true);
           }}
           className="w-full sm:w-auto bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
@@ -151,8 +151,8 @@ const Inventory = () => {
           <table className="min-w-full bg-white border border-gray-300">
             <thead>
               <tr className="bg-gray-100">
+                <th className="py-2 px-3 sm:px-4 border-b text-left">Item Code</th>
                 <th className="py-2 px-3 sm:px-4 border-b text-left">Name</th>
-                <th className="py-2 px-3 sm:px-4 border-b text-left hidden sm:table-cell">Description</th>
                 <th className="py-2 px-3 sm:px-4 border-b text-right">Qty</th>
                 <th className="py-2 px-3 sm:px-4 border-b text-right">Price (LKR)</th>
                 <th className="py-2 px-3 sm:px-4 border-b text-center">Actions</th>
@@ -162,10 +162,9 @@ const Inventory = () => {
               {items.map((item) => (
                 <tr key={item._id} className="hover:bg-gray-50">
                   <td className="py-2 px-3 sm:px-4 border-b">
-                    <div>{item.name}</div>
-                    <div className="text-sm text-gray-500 sm:hidden">{item.description}</div>
+                    <div>{item.itemCode}</div>
                   </td>
-                  <td className="py-2 px-3 sm:px-4 border-b hidden sm:table-cell">{item.description}</td>
+                  <td className="py-2 px-3 sm:px-4 border-b">{item.name}</td>
                   <td className="py-2 px-3 sm:px-4 border-b text-right">{item.quantity}</td>
                   <td className="py-2 px-3 sm:px-4 border-b text-right">{item.price}</td>
                   <td className="py-2 px-3 sm:px-4 border-b">
@@ -199,6 +198,17 @@ const Inventory = () => {
               {editingItem ? 'Edit Item' : 'Add New Item'}
             </h3>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Item Code</label>
+                <input
+                  type="text"
+                  name="itemCode"
+                  value={editingItem ? editingItem.itemCode : newItem.itemCode}
+                  onChange={handleChange}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                  required
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
                 <input

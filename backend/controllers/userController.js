@@ -76,7 +76,14 @@ const loginUser = async (req, res) => {
 
     if (isMatch) {
       const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-      res.json({ success: true, token });
+      res.json({
+        success: true,
+        token,
+        user: {
+          name: user.name,
+          email: user.email,
+        },
+      });
     } else {
       res.json({ success: false, message: "Invalid email or password" });
     }
@@ -138,10 +145,10 @@ const updateProfile = async (req, res) => {
 
 const addInventory = async (req, res) => {
   try {
-    const { name, description, quantity, price } = req.body;
+    const { name, description, quantity, price, itemCode } = req.body;
 
     // Validate input
-    if (!name || !description || !quantity || !price) {
+    if (!name || !description || !quantity || !price || !itemCode) {
       return res.json({ success: false, message: "Please fill in all fields" });
     }
 
@@ -152,12 +159,48 @@ const addInventory = async (req, res) => {
       });
     }
 
+    // Validate itemCode
+    const itemCodeStr = String(itemCode).trim();
+    const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+
+    if (itemCodeStr.length === 0) {
+      return res.json({
+        success: false,
+        message: "Item code cannot be empty",
+      });
+    }
+
+    if (itemCodeStr.length > 5) {
+      return res.json({
+        success: false,
+        message: "Item code cannot be more than 5 characters",
+      });
+    }
+
+    if (!alphanumericRegex.test(itemCodeStr)) {
+      return res.json({
+        success: false,
+        message:
+          "Item code can only contain letters and numbers (no special characters or spaces)",
+      });
+    }
+
+    // Check for existing item with same code
+    const existingItem = await Inventory.findOne({ itemCode: itemCodeStr });
+    if (existingItem) {
+      return res.json({
+        success: false,
+        message: "An item with this code already exists",
+      });
+    }
+
     // Create inventory item
     const newItem = new Inventory({
       name,
       description,
-      quantity,
-      price,
+      quantity: Number(quantity),
+      price: Number(price),
+      itemCode: itemCodeStr,
     });
 
     await newItem.save();
@@ -168,8 +211,11 @@ const addInventory = async (req, res) => {
       newItem,
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Error adding inventory item:", error);
+    res.json({
+      success: false,
+      message: error.message || "Error adding inventory item",
+    });
   }
 };
 
@@ -186,10 +232,10 @@ const getInventory = async (req, res) => {
 const updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, quantity, price } = req.body;
+    const { name, description, quantity, price, itemCode } = req.body;
 
     // Validate input
-    if (!name || !description || !quantity || !price) {
+    if (!name || !description || !quantity || !price || !itemCode) {
       return res.json({ success: false, message: "Please fill in all fields" });
     }
 
@@ -200,10 +246,55 @@ const updateInventory = async (req, res) => {
       });
     }
 
+    // Validate itemCode
+    const itemCodeStr = String(itemCode).trim();
+    const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+
+    if (itemCodeStr.length === 0) {
+      return res.json({
+        success: false,
+        message: "Item code cannot be empty",
+      });
+    }
+
+    if (itemCodeStr.length > 5) {
+      return res.json({
+        success: false,
+        message: "Item code cannot be more than 5 characters",
+      });
+    }
+
+    if (!alphanumericRegex.test(itemCodeStr)) {
+      return res.json({
+        success: false,
+        message:
+          "Item code can only contain letters and numbers (no special characters or spaces)",
+      });
+    }
+
+    // Check if another item with the same code already exists (excluding current item)
+    const existingItem = await Inventory.findOne({
+      _id: { $ne: id }, // Exclude current item
+      itemCode: itemCodeStr,
+    });
+
+    if (existingItem) {
+      return res.json({
+        success: false,
+        message: "An item with this code already exists",
+      });
+    }
+
     const updatedItem = await Inventory.findByIdAndUpdate(
       id,
-      { name, description, quantity, price },
-      { new: true }
+      {
+        name,
+        description,
+        quantity: Number(quantity),
+        price: Number(price),
+        itemCode: itemCodeStr,
+      },
+      { new: true, runValidators: true }
     );
 
     if (!updatedItem) {
@@ -216,8 +307,11 @@ const updateInventory = async (req, res) => {
       updatedItem,
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Error updating inventory item:", error);
+    res.json({
+      success: false,
+      message: error.message || "Error updating inventory item",
+    });
   }
 };
 
@@ -242,10 +336,10 @@ const createBill = async (req, res) => {
     const { customerName, customerMobile, items } = req.body;
 
     // Validate input
-    if (!customerName || !customerMobile || !items || items.length === 0) {
+    if (!items || items.length === 0) {
       return res.json({
         success: false,
-        message: "Please provide all required fields",
+        message: "Please add an item to the bill",
       });
     }
 

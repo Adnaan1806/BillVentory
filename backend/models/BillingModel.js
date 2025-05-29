@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
 const billingSchema = new mongoose.Schema({
-  customerName: { type: String, required: true },
-  customerMobile: { type: String, required: true },
+  customerName: { type: String },
+  customerMobile: { type: String },
   items: [
     {
       itemId: {
