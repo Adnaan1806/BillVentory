@@ -60,6 +60,16 @@ const Navbar = () => {
         >
           SALES
         </NavLink>
+        <NavLink
+          to="/analytics"
+          className={({ isActive }) =>
+            isActive
+              ? "text-primary border-b-2 border-customOrange"
+              : "text-gray-600 hover:text-primary"
+          }
+        >
+          ANALYTICS
+        </NavLink>
       </ul>
 
       <div className="flex items-center gap-4 relative">
@@ -123,6 +133,9 @@ const Navbar = () => {
             </NavLink>
             <NavLink onClick={() => setShowMenu(false)} to="/sales">
               <p className="px-4 py-2 rounded inline-block">SALES</p>
+            </NavLink>
+            <NavLink onClick={() => setShowMenu(false)} to="/analytics">
+              <p className="px-4 py-2 rounded inline-block">ANALYTICS</p>
             </NavLink>
           </ul>
         </div>

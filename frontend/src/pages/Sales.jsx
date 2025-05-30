@@ -231,12 +231,13 @@ const Sales = () => {
                         {new Date(bill.date).toLocaleDateString()}
                       </td>
                       <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium">
-                          {bill.customerName}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {bill.customerMobile}
-                        </div>
+                        {bill.customerName || bill.customerMobile ? (
+                        <><div className="text-sm font-medium">
+                            {bill.customerName}
+                          </div><div className="text-sm text-gray-500">
+                              {bill.customerMobile}
+                            </div></>
+                        ) : "-"}
                       </td>
                       <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
                         {bill.items.length} items

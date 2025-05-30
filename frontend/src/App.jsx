@@ -7,6 +7,7 @@ import Navbar from './components/Navbar'
 import { Toaster } from 'react-hot-toast'
 import Billing from './pages/Billing'
 import Sales from './pages/Sales'
+import Analytics from './pages/Analytics'
 import { AppContext } from './context/AppContext'
 
 const App = () => {
@@ -45,6 +46,7 @@ const App = () => {
         <Route path='/billing' element={token ? <Billing /> : <Navigate to="/" replace />} />
         <Route path='/my-profile' element={token ? <MyProfile /> : <Navigate to="/" replace />} />
         <Route path='/sales' element={token ? <Sales /> : <Navigate to="/" replace />} />
+        <Route path='/analytics' element={token ? <Analytics /> : <Navigate to="/" replace />} />
       </Routes>
     </div>
   )
