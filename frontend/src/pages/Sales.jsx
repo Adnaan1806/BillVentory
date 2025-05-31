@@ -54,8 +54,10 @@ const Sales = () => {
       const query = searchQuery.toLowerCase();
       return (
         bill._id.toLowerCase().includes(query) ||
-        bill.customerName.toLowerCase().includes(query) ||
-        bill.customerMobile.toLowerCase().includes(query)
+        (bill.customerName &&
+          bill.customerName.toLowerCase().includes(query)) ||
+        (bill.customerMobile &&
+          bill.customerMobile.toLowerCase().includes(query))
       );
     }
 
@@ -86,8 +88,39 @@ const Sales = () => {
         backendUrl + "/api/user/get-bill/" + billId,
         { headers: { token } }
       );
+
+      console.log("Bill details API response:", response.data);
+
       if (response.data.success) {
-        setSelectedBill(response.data.bill);
+        const billData = response.data.bill;
+
+        // Log the bill data for debugging
+        console.log("Bill data:", {
+          subtotal: billData.subtotal,
+          discountType: billData.discountType,
+          discountValue: billData.discountValue,
+          discountAmount: billData.discountAmount,
+          totalAmount: billData.totalAmount,
+          items: billData.items,
+        });
+
+        // Calculate subtotal if not present
+        if (!billData.subtotal) {
+          billData.subtotal = calculateSubtotal(billData.items);
+          console.log("Calculated subtotal:", billData.subtotal);
+        }
+
+        // Calculate discount amount if not present
+        if (
+          billData.discountType &&
+          billData.discountValue > 0 &&
+          !billData.discountAmount
+        ) {
+          billData.discountAmount = calculateDiscountAmount(billData);
+          console.log("Calculated discount amount:", billData.discountAmount);
+        }
+
+        setSelectedBill(billData);
         setShowBillModal(true);
       } else {
         toast.error(response.data.message);
@@ -95,6 +128,32 @@ const Sales = () => {
     } catch (error) {
       console.error("Error fetching bill details:", error);
       toast.error("Failed to fetch bill details");
+    }
+  };
+
+  // Calculate subtotal from items (fallback if not stored)
+  const calculateSubtotal = (items) => {
+    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  };
+
+  // Calculate discount amount (fallback if not stored)
+  const calculateDiscountAmount = (bill) => {
+    if (!bill.discountType || !bill.discountValue || bill.discountValue <= 0) {
+      return 0;
+    }
+
+    // Use stored discountAmount if available
+    if (bill.discountAmount !== undefined && bill.discountAmount !== null) {
+      return bill.discountAmount;
+    }
+
+    // Calculate discount amount as fallback
+    const subtotal = bill.subtotal || calculateSubtotal(bill.items);
+
+    if (bill.discountType === "percentage") {
+      return (subtotal * bill.discountValue) / 100;
+    } else {
+      return Math.min(bill.discountValue, subtotal);
     }
   };
 
@@ -159,7 +218,9 @@ const Sales = () => {
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="text-sm text-blue-600 font-medium">Total Sales (LKR)</h3>
+            <h3 className="text-sm text-blue-600 font-medium">
+              Total Sales (LKR)
+            </h3>
             <p className="text-xl sm:text-2xl font-bold">
               {analytics.totalSales.toFixed(2)}
             </p>
@@ -214,47 +275,58 @@ const Sales = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-4">
+                    <td colSpan="7" className="text-center py-4">
                       Loading...
                     </td>
                   </tr>
                 ) : filteredBills.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="text-center py-4">
+                    <td colSpan="7" className="text-center py-4">
                       No bills found
                     </td>
                   </tr>
                 ) : (
-                  filteredBills.map((bill) => (
-                    <tr key={bill._id} className="hover:bg-gray-50">
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
-                        {new Date(bill.date).toLocaleDateString()}
-                      </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                        {bill.customerName || bill.customerMobile ? (
-                        <><div className="text-sm font-medium">
-                            {bill.customerName}
-                          </div><div className="text-sm text-gray-500">
-                              {bill.customerMobile}
-                            </div></>
-                        ) : "-"}
-                      </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
-                        {bill.items.length} items
-                      </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {bill.totalAmount.toFixed(2)}
-                      </td>
-                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => viewBillDetails(bill._id)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  filteredBills.map((bill) => {
+                    const subtotal =
+                      bill.subtotal || calculateSubtotal(bill.items);
+                    const discountAmount = calculateDiscountAmount(bill);
+
+                    return (
+                      <tr key={bill._id} className="hover:bg-gray-50">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
+                          {new Date(bill.date).toLocaleDateString()}
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                          {bill.customerName || bill.customerMobile ? (
+                            <>
+                              <div className="text-sm font-medium">
+                                {bill.customerName || "-"}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {bill.customerMobile || "-"}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-gray-500">-</span>
+                          )}
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
+                          {bill.items.length} items
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {bill.totalAmount.toFixed(2)}
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
+                          <button
+                            onClick={() => viewBillDetails(bill._id)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -277,14 +349,32 @@ const Sales = () => {
             </div>
 
             <div className="space-y-4">
-              {selectedBill.customerName || selectedBill.customerMobile ? (
-                <div>
-                  <p className="text-sm text-gray-500">Customer Details</p>
-                  <p className="font-medium">{selectedBill.customerName}</p>
-                  <p className="text-gray-600">{selectedBill.customerMobile}</p>
-                </div>
-              ) : null}
+              {/* Bill ID */}
+              <div>
+                <p className="text-sm text-gray-500">Bill ID</p>
+                <p className="font-mono text-sm">{selectedBill._id}</p>
+              </div>
 
+              {/* Customer Details */}
+              {(selectedBill.customerName || selectedBill.customerMobile) && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">Customer Details</p>
+                  {selectedBill.customerName && (
+                    <p className="text-sm">
+                      <span className="font-medium">Name:</span>{" "}
+                      {selectedBill.customerName}
+                    </p>
+                  )}
+                  {selectedBill.customerMobile && (
+                    <p className="text-sm">
+                      <span className="font-medium">Mobile:</span>{" "}
+                      {selectedBill.customerMobile}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Items Table */}
               <div className="overflow-x-auto -mx-4 sm:mx-0">
                 <div className="inline-block min-w-full align-middle">
                   <p className="text-sm text-gray-500 mb-2 px-4 sm:px-0">
@@ -326,14 +416,52 @@ const Sales = () => {
                       ))}
                     </tbody>
                     <tfoot className="bg-gray-50">
+                      {/* Subtotal */}
                       <tr>
                         <td
                           colSpan="3"
-                          className="px-3 sm:px-4 py-2 text-sm font-medium text-right"
+                          className="px-3 sm:px-4 py-2 text-sm text-right font-medium"
+                        >
+                          Subtotal (LKR):
+                        </td>
+                        <td className="px-3 sm:px-4 py-2 text-sm font-medium">
+                          {(
+                            selectedBill.subtotal ||
+                            calculateSubtotal(selectedBill.items)
+                          ).toFixed(2)}
+                        </td>
+                      </tr>
+
+                      {/* Discount Row - Only show if discount exists */}
+                      {selectedBill.discountType &&
+                        selectedBill.discountValue > 0 && (
+                          <tr>
+                            <td
+                              colSpan="3"
+                              className="px-3 sm:px-4 py-2 text-sm text-right font-medium"
+                            >
+                              Discount (
+                              {selectedBill.discountType === "percentage"
+                                ? `${selectedBill.discountValue}%`
+                                : `LKR ${selectedBill.discountValue}`}
+                              ):
+                            </td>
+                            <td className="px-3 sm:px-4 py-2 text-sm text-red-600 font-medium">
+                              -
+                              {calculateDiscountAmount(selectedBill).toFixed(2)}
+                            </td>
+                          </tr>
+                        )}
+
+                      {/* Total */}
+                      <tr className="border-t border-gray-300">
+                        <td
+                          colSpan="3"
+                          className="px-3 sm:px-4 py-3 text-sm font-bold text-right"
                         >
                           Total Amount (LKR):
                         </td>
-                        <td className="px-3 sm:px-4 py-2 text-sm font-medium">
+                        <td className="px-3 sm:px-4 py-3 text-sm font-bold">
                           {selectedBill.totalAmount.toFixed(2)}
                         </td>
                       </tr>
@@ -342,8 +470,10 @@ const Sales = () => {
                 </div>
               </div>
 
-              <div className="text-sm text-gray-500 px-4 sm:px-0">
-                Bill Date: {new Date(selectedBill.date).toLocaleString()}
+              {/* Bill Date */}
+              <div className="text-sm text-gray-500 px-4 sm:px-0 border-t pt-4">
+                <span className="font-medium">Bill Date:</span>{" "}
+                {new Date(selectedBill.date).toLocaleString()}
               </div>
             </div>
           </div>

@@ -333,7 +333,8 @@ const deleteInventory = async (req, res) => {
 
 const createBill = async (req, res) => {
   try {
-    const { customerName, customerMobile, items } = req.body;
+    const { customerName, customerMobile, items, discountType, discountValue } =
+      req.body;
 
     // Validate input
     if (!items || items.length === 0) {
@@ -343,8 +344,8 @@ const createBill = async (req, res) => {
       });
     }
 
-    // Calculate total amount and update inventory
-    let totalAmount = 0;
+    // Calculate subtotal and update inventory
+    let subtotal = 0;
     for (const item of items) {
       const inventoryItem = await Inventory.findById(item.itemId);
       if (!inventoryItem) {
@@ -366,26 +367,60 @@ const createBill = async (req, res) => {
         { $inc: { quantity: -item.quantity } }
       );
 
-      totalAmount += item.price * item.quantity;
+      subtotal += item.price * item.quantity;
     }
 
-    // Create new bill
-    const newBill = new Billing({
-      customerName,
-      customerMobile,
-      items,
-      totalAmount,
-    });
+    // Initialize discount variables
+    let discountAmount = 0;
+    let finalDiscountType = null;
+    let finalDiscountValue = 0;
 
-    await newBill.save();
+    // Calculate discount only if discountType and discountValue are provided
+    if (discountType && discountValue && discountValue > 0) {
+      finalDiscountType = discountType;
+      finalDiscountValue = discountValue;
+
+      if (discountType === "percentage") {
+        // Ensure percentage doesn't exceed 100%
+        const validPercentage = Math.min(discountValue, 100);
+        discountAmount = (subtotal * validPercentage) / 100;
+        finalDiscountValue = validPercentage;
+      } else if (discountType === "fixed") {
+        // Ensure fixed discount doesn't exceed subtotal
+        discountAmount = Math.min(discountValue, subtotal);
+      }
+    }
+
+    // Calculate total amount after discount
+    const totalAmount = Math.max(0, subtotal - discountAmount);
+
+    // Create new bill with explicit values
+    const billData = {
+      customerName: customerName || "",
+      customerMobile: customerMobile || "",
+      items,
+      subtotal: Math.round(subtotal * 100) / 100, // Round to 2 decimal places
+      discountType: finalDiscountType,
+      discountValue: finalDiscountValue,
+      discountAmount: Math.round(discountAmount * 100) / 100,
+      totalAmount: Math.round(totalAmount * 100) / 100,
+    };
+
+    console.log("Bill data before saving:", billData); // Debug log
+
+    const newBill = new Billing(billData);
+    const savedBill = await newBill.save();
+
+    console.log("Saved bill:", savedBill); // Debug log
 
     res.json({
       success: true,
       message: "Bill created successfully",
-      bill: newBill,
+      bill: savedBill,
+      billId: savedBill._id,
     });
   } catch (error) {
-    console.log(error);
+    console.error("Error creating bill:", error);
     res.json({ success: false, message: error.message });
   }
 };

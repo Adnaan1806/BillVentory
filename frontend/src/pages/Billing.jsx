@@ -15,6 +15,10 @@ const Billing = () => {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [discountType, setDiscountType] = useState("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+  const [showDiscountInput, setShowDiscountInput] = useState(false);
+  const [discountError, setDiscountError] = useState("");
 
   // Validate mobile number format
   const validateMobileNumber = (number) => {
@@ -120,10 +124,25 @@ const Billing = () => {
     setSelectedItems(selectedItems.filter((_, i) => i !== index));
   };
 
-  const totalAmount = selectedItems.reduce(
+  const subtotal = selectedItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
+
+  // Calculate discount amount
+  const discountAmount = (() => {
+    if (!discountValue || parseFloat(discountValue) <= 0) return 0;
+
+    const value = parseFloat(discountValue);
+    if (discountType === "percentage") {
+      return (subtotal * value) / 100;
+    } else {
+      return Math.min(value, subtotal);
+    }
+  })();
+
+  // Calculate total after discount
+  const totalAmount = subtotal - discountAmount;
 
   const printBill = (billData) => {
     // Check if we're on a mobile device
@@ -387,29 +406,25 @@ const Billing = () => {
             <div class="total-section">
               <div class="total-row">
                 <span>Subtotal:</span>
-                <span>LKR ${billData.items
-                  .reduce(
-                    (total, item) => total + item.price * item.quantity,
-                    0
-                  )
-                  .toFixed(2)}</span>
+                <span>LKR ${billData.subtotal.toFixed(2)}</span>
               </div>
-              <div class="total-row">
-                <span>Tax (0%):</span>
-                <span>LKR 0.00</span>
-              </div>
-              <div class="total-row">
-                <span>Discount:</span>
-                <span>LKR 0.00</span>
-              </div>
+              ${
+                billData.discountType && billData.discountValue
+                  ? `
+                <div class="total-row">
+                  <span>Discount (${
+                    billData.discountType === "percentage"
+                      ? billData.discountValue + "%"
+                      : "LKR " + billData.discountValue
+                  }):</span>
+                  <span>LKR ${billData.discountAmount.toFixed(2)}</span>
+                </div>
+              `
+                  : ""
+              }
               <div class="total-row final">
                 <span>TOTAL:</span>
-                <span>LKR ${billData.items
-                  .reduce(
-                    (total, item) => total + item.price * item.quantity,
-                    0
-                  )
-                  .toFixed(2)}</span>
+                <span>LKR ${billData.totalAmount.toFixed(2)}</span>
               </div>
             </div>
             
@@ -446,16 +461,54 @@ const Billing = () => {
       return;
     }
 
+    // Check if discount input is shown but no value is entered
+    if (showDiscountInput && !discountValue) {
+      setDiscountError("Please enter a discount value or remove the discount");
+      return;
+    }
+
+    // Additional validation for discount
+    if (discountValue) {
+      const numValue = parseFloat(discountValue);
+      if (isNaN(numValue)) {
+        setDiscountError("Please enter a valid discount value");
+        return;
+      }
+
+      if (discountType === "percentage") {
+        if (numValue <= 0 || numValue > 100) {
+          setDiscountError("Discount must be between 0.01% and 100%");
+          return;
+        }
+      } else {
+        if (numValue <= 0) {
+          setDiscountError("Discount must be greater than 0");
+          return;
+        }
+        if (numValue > subtotal) {
+          setDiscountError("Discount cannot exceed subtotal amount");
+          return;
+        }
+      }
+    }
+
     setLoading(true);
     try {
+      const requestData = {
+        customerName,
+        customerMobile,
+        items: selectedItems,
+      };
+
+      // Only include discount fields if a discount is applied
+      if (discountValue && parseFloat(discountValue) > 0) {
+        requestData.discountType = discountType;
+        requestData.discountValue = parseFloat(discountValue);
+      }
+
       const response = await axios.post(
         backendUrl + "/api/user/create-bill",
-        {
-          customerName,
-          customerMobile,
-          items: selectedItems,
-          totalAmount,
-        },
+        requestData,
         { headers: { token } }
       );
 
@@ -468,21 +521,126 @@ const Billing = () => {
             customerName,
             customerMobile,
             items: selectedItems,
+            subtotal,
+            discountType: discountValue ? discountType : null,
+            discountValue: discountValue ? parseFloat(discountValue) : 0,
+            discountAmount,
+            totalAmount,
           });
         }
         // Reset form
         setCustomerName("");
         setCustomerMobile("");
         setSelectedItems([]);
-        fetchInventoryItems();
+        setDiscountType("percentage");
+        setDiscountValue("");
+        setShowDiscountInput(false);
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
       console.error("Error creating bill:", error);
       toast.error("Failed to create bill");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const handleDiscountChange = (value) => {
+    // Allow empty string for backspace/delete
+    if (value === "") {
+      setDiscountValue("");
+      setDiscountError("");
+      return;
+    }
+
+    // Only allow numbers and one decimal point
+    if (!/^\d*\.?\d*$/.test(value)) {
+      return;
+    }
+
+    // Check for multiple decimal points
+    if ((value.match(/\./g) || []).length > 1) {
+      return;
+    }
+
+    // Check decimal places - limit to 2 decimal places
+    const decimalParts = value.split(".");
+    if (decimalParts[1] && decimalParts[1].length > 2) {
+      return; // Don't allow more than 2 decimal places
+    }
+
+    // Set the value first
+    setDiscountValue(value);
+
+    // If the input ends with a decimal point, don't validate yet
+    if (value.endsWith(".")) {
+      setDiscountError("");
+      return;
+    }
+
+    // Convert to number for validation
+    const numValue = parseFloat(value);
+
+    // Check if it's a valid number
+    if (isNaN(numValue)) {
+      setDiscountError("Please enter a valid number");
+      return;
+    }
+
+    // Validate based on discount type
+    if (discountType === "percentage") {
+      if (numValue <= 0) {
+        setDiscountError("Discount must be greater than 0%");
+      } else if (numValue > 100) {
+        setDiscountError("Discount cannot exceed 100%");
+      } else {
+        setDiscountError("");
+      }
+    } else {
+      // Fixed amount validation
+      if (numValue <= 0) {
+        setDiscountError("Discount must be greater than 0");
+      } else if (numValue > subtotal) {
+        setDiscountError("Discount cannot exceed subtotal amount");
+      } else {
+        setDiscountError("");
+      }
+    }
+  };
+
+  const handleDiscountTypeChange = (type) => {
+    setDiscountType(type);
+
+    if (discountValue) {
+      // Reset validation when changing type
+      const numValue = parseFloat(discountValue);
+
+      if (isNaN(numValue) || discountValue.endsWith(".")) {
+        setDiscountError("");
+        return;
+      }
+
+      // Validate against new type's constraints
+      if (type === "percentage") {
+        if (numValue <= 0) {
+          setDiscountError("Discount must be greater than 0%");
+        } else if (numValue > 100) {
+          setDiscountError("Discount cannot exceed 100%");
+        } else {
+          setDiscountError("");
+        }
+      } else {
+        // Fixed amount
+        if (numValue <= 0) {
+          setDiscountError("Discount must be greater than 0");
+        } else if (numValue > subtotal) {
+          setDiscountError("Discount cannot exceed subtotal amount");
+        } else {
+          setDiscountError("");
+        }
+      }
+    }
   };
 
   const filteredItems = inventoryItems.filter(
@@ -622,10 +780,88 @@ const Billing = () => {
 
           {/* Total and Create Bill Button */}
           <div className="border-t pt-4">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-xl font-semibold">Total Amount:</span>
-              <span className="text-xl font-semibold">LKR {totalAmount}</span>
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between">
+                <span>Subtotal:</span>
+                <span>LKR {subtotal.toFixed(2)}</span>
+              </div>
+
+              {/* Discount Section */}
+              <div className="border-t pt-2">
+                {showDiscountInput ? (
+                  <div className="space-y-2 mb-2">
+                    <div className="flex items-center space-x-2">
+                      <select
+                        value={discountType}
+                        onChange={(e) =>
+                          handleDiscountTypeChange(e.target.value)
+                        }
+                        className="p-1 border rounded text-sm"
+                      >
+                        <option value="percentage">Percentage</option>
+                        <option value="fixed">Fixed</option>
+                      </select>
+                      <div className="relative flex-1">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={discountValue}
+                          onChange={(e) => handleDiscountChange(e.target.value)}
+                          onBlur={() => {
+                            if (showDiscountInput && !discountValue) {
+                              setDiscountError("Please enter a discount value");
+                            }
+                          }}
+                          placeholder={
+                            discountType === "percentage" ? "0.00" : "0.00"
+                          }
+                          className={`w-full p-2 border rounded text-sm ${
+                            discountError ? "border-red-500" : ""
+                          }`}
+                        />
+                      </div>
+                      <button
+                        onClick={() => {
+                          setDiscountValue("");
+                          setDiscountError("");
+                          setShowDiscountInput(false);
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
+
+                    {/* Error message displayed below the input */}
+                    {discountError && (
+                      <div className="text-xs text-red-500 mt-1">
+                        {discountError}
+                      </div>
+                    )}
+
+                    {discountValue && !discountError && (
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Discount:</span>
+                        <span>-LKR {discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowDiscountInput(true)}
+                    className="text-sm text-blue-400 mb-2"
+                  >
+                    + Add Discount
+                  </button>
+                )}
+              </div>
+
+              <div className="flex justify-between font-semibold border-t pt-2">
+                <span>Total:</span>
+                <span>LKR {totalAmount.toFixed(2)}</span>
+              </div>
             </div>
+
             <button
               onClick={handleCreateBill}
               disabled={loading || selectedItems.length === 0}

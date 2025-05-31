@@ -15,6 +15,21 @@ const billingSchema = new mongoose.Schema({
       quantity: { type: Number, required: true },
     },
   ],
+  subtotal: { type: Number, required: true },
+  discountType: {
+    type: String,
+    enum: ["percentage", "fixed", null],
+    default: null,
+  },
+  discountValue: {
+    type: Number,
+    default: 0,
+    min: 0,
+  },
+  discountAmount: {
+    type: Number,
+    default: 0,
+  },
   totalAmount: { type: Number, required: true },
   date: { type: Date, default: Date.now },
 });
