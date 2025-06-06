@@ -465,6 +465,28 @@ const Sales = () => {
                           {selectedBill.totalAmount.toFixed(2)}
                         </td>
                       </tr>
+                      <tr className="border-t border-gray-300">
+                        <td
+                          colSpan="3"
+                          className="px-3 sm:px-4 py-3 text-sm font-bold text-right"
+                        >
+                          Total Paid (LKR):
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 text-sm font-bold">
+                          {selectedBill.totalPaid.toFixed(2)}
+                        </td>
+                      </tr>
+                      <tr className="border-t border-gray-300">
+                        <td
+                          colSpan="3"
+                          className="px-3 sm:px-4 py-3 text-red-500 text-sm font-bold text-right"
+                        >
+                          Due Amount (LKR):
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 text-red-500 text-sm font-bold">
+                          {selectedBill.dueAmount.toFixed(2)}
+                        </td>
+                      </tr>
                     </tfoot>
                   </table>
                 </div>

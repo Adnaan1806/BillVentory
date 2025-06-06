@@ -333,8 +333,14 @@ const deleteInventory = async (req, res) => {
 
 const createBill = async (req, res) => {
   try {
-    const { customerName, customerMobile, items, discountType, discountValue } =
-      req.body;
+    const {
+      customerName,
+      customerMobile,
+      items,
+      discountType,
+      discountValue,
+      totalPaid: totalPaidFromRequest,
+    } = req.body;
 
     // Validate input
     if (!items || items.length === 0) {
@@ -394,6 +400,26 @@ const createBill = async (req, res) => {
     // Calculate total amount after discount
     const totalAmount = Math.max(0, subtotal - discountAmount);
 
+    // Validate and process totalPaid
+    const totalPaid = parseFloat(totalPaidFromRequest) || 0;
+
+    if (totalPaid < 0) {
+      return res.json({
+        success: false,
+        message: "Paid amount cannot be negative",
+      });
+    }
+
+    if (totalPaid > totalAmount) {
+      return res.json({
+        success: false,
+        message: "Paid amount cannot be greater than the total amount",
+      });
+    }
+
+    // Calculate due amount
+    const dueAmount = totalAmount - totalPaid;
+
     // Create new bill with explicit values
     const billData = {
       customerName: customerName || "",
@@ -404,6 +430,8 @@ const createBill = async (req, res) => {
       discountValue: finalDiscountValue,
       discountAmount: Math.round(discountAmount * 100) / 100,
       totalAmount: Math.round(totalAmount * 100) / 100,
+      totalPaid: Math.round(totalPaid * 100) / 100, // Add totalPaid
+      dueAmount: Math.round(dueAmount * 100) / 100, // Add dueAmount
     };
 
     console.log("Bill data before saving:", billData); // Debug log

@@ -19,6 +19,7 @@ const Billing = () => {
   const [discountValue, setDiscountValue] = useState("");
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [discountError, setDiscountError] = useState("");
+  const [totalPaid, setTotalPaid] = useState(0);
 
   // Validate mobile number format
   const validateMobileNumber = (number) => {
@@ -143,6 +144,9 @@ const Billing = () => {
 
   // Calculate total after discount
   const totalAmount = subtotal - discountAmount;
+
+  // Calculate due amount
+  const dueAmount = totalAmount - (parseFloat(totalPaid) || 0);
 
   const printBill = (billData) => {
     // Check if we're on a mobile device
@@ -381,7 +385,7 @@ const Billing = () => {
               <div class="items-header">
                 <div style="display: flex; justify-content: space-between;">
                   <span>ITEM</span>
-                  <span>QTY x PRICE = TOTAL</span>
+                  <span>QTY x PRICE = TOTAL(LKR)</span>
                 </div>
               </div>
               
@@ -392,7 +396,7 @@ const Billing = () => {
                     <div class="item-name">${item.name}</div>
                     <div class="item-details">
                       <span>${item.quantity} x ${item.price.toFixed(2)}</span>
-                      <span>LKR ${(item.price * item.quantity).toFixed(
+                      <span>${(item.price * item.quantity).toFixed(
                         2
                       )}</span>
                     </div>
@@ -417,7 +421,7 @@ const Billing = () => {
                       ? billData.discountValue + "%"
                       : "LKR " + billData.discountValue
                   }):</span>
-                  <span>LKR ${billData.discountAmount.toFixed(2)}</span>
+                  <span> - ${billData.discountAmount.toFixed(2)}</span>
                 </div>
               `
                   : ""
@@ -425,6 +429,14 @@ const Billing = () => {
               <div class="total-row final">
                 <span>TOTAL:</span>
                 <span>LKR ${billData.totalAmount.toFixed(2)}</span>
+              </div>
+              <div class="total-row final">
+                <span>TOTAL PAID:</span>
+                <span>LKR ${billData.totalPaid.toFixed(2)}</span>
+              </div>
+              <div class="total-row final">
+                <span>DUE AMOUNT:</span>
+                <span>LKR ${billData.dueAmount.toFixed(2)}</span>
               </div>
             </div>
             
@@ -481,6 +493,7 @@ const Billing = () => {
           return;
         }
       } else {
+        // Fixed amount validation
         if (numValue <= 0) {
           setDiscountError("Discount must be greater than 0");
           return;
@@ -490,6 +503,11 @@ const Billing = () => {
           return;
         }
       }
+    }
+
+    if (parseFloat(totalPaid) > totalAmount) {
+      toast.error("Paid amount cannot be greater than total amount");
+      return;
     }
 
     setLoading(true);
@@ -505,6 +523,9 @@ const Billing = () => {
         requestData.discountType = discountType;
         requestData.discountValue = parseFloat(discountValue);
       }
+
+      requestData.totalPaid = parseFloat(totalPaid) || 0;
+      requestData.dueAmount = dueAmount;
 
       const response = await axios.post(
         backendUrl + "/api/user/create-bill",
@@ -526,6 +547,8 @@ const Billing = () => {
             discountValue: discountValue ? parseFloat(discountValue) : 0,
             discountAmount,
             totalAmount,
+            totalPaid: parseFloat(totalPaid) || 0,
+            dueAmount,
           });
         }
         // Reset form
@@ -535,6 +558,7 @@ const Billing = () => {
         setDiscountType("percentage");
         setDiscountValue("");
         setShowDiscountInput(false);
+        setTotalPaid(0);
       } else {
         toast.error(response.data.message);
       }
@@ -640,6 +664,51 @@ const Billing = () => {
           setDiscountError("");
         }
       }
+    }
+  };
+
+  const handleTotalPaidChange = (value) => {
+    // Allow empty string for backspace/delete
+    if (value === "") {
+      setTotalPaid("");
+      return;
+    }
+
+    // Only allow numbers and one decimal point
+    if (!/^\d*\.?\d*$/.test(value)) {
+      return;
+    }
+
+    // Check for multiple decimal points
+    if ((value.match(/\./g) || []).length > 1) {
+      return;
+    }
+
+    // Check decimal places - limit to 2 decimal places
+    const decimalParts = value.split(".");
+    if (decimalParts[1] && decimalParts[1].length > 2) {
+      return; // Don't allow more than 2 decimal places
+    }
+
+    // Set the value first
+    setTotalPaid(value);
+
+    // If the input ends with a decimal point, don't validate yet
+    if (value.endsWith(".")) {
+      return;
+    }
+
+    // Convert to number for validation
+    const numValue = parseFloat(value);
+
+    // Check if it's a valid number
+    if (isNaN(numValue)) {
+      return;
+    }
+
+    // Validate if paid amount exceeds total amount
+    if (numValue > totalAmount) {
+      toast.error("Paid amount cannot be greater than total amount");
     }
   };
 
@@ -859,6 +928,41 @@ const Billing = () => {
               <div className="flex justify-between font-semibold border-t pt-2">
                 <span>Total:</span>
                 <span>LKR {totalAmount.toFixed(2)}</span>
+              </div>
+
+              {/* Total Paid Input */}
+              <div className="mt-4">
+                <label
+                  htmlFor="totalPaid"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Total Paid (LKR)
+                </label>
+                <input
+                  type="number"
+                  id="totalPaid"
+                  name="totalPaid"
+                  value={totalPaid}
+                  onChange={(e) => handleTotalPaidChange(e.target.value)}
+                  onBlur={(e) => {
+                    // Format to two decimal places on blur if it's a valid number
+                    const value = parseFloat(e.target.value);
+                    if (!isNaN(value)) {
+                      setTotalPaid(value.toFixed(2));
+                    } else {
+                      setTotalPaid(0); // Default to 0 if input is invalid
+                    }
+                  }}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                  placeholder="0.00"
+                />
+              </div>
+
+              {/* Due Amount Display */}
+              <div className="mt-4 p-3 bg-red-50 rounded-md">
+                <div className="text-lg font-semibold text-red-600">
+                  Due Amount: LKR {dueAmount.toFixed(2)}
+                </div>
               </div>
             </div>
 
