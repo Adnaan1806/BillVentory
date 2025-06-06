@@ -396,9 +396,7 @@ const Billing = () => {
                     <div class="item-name">${item.name}</div>
                     <div class="item-details">
                       <span>${item.quantity} x ${item.price.toFixed(2)}</span>
-                      <span>${(item.price * item.quantity).toFixed(
-                        2
-                      )}</span>
+                      <span>${(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   </div>
                 `
@@ -435,7 +433,7 @@ const Billing = () => {
                 <span>LKR ${billData.totalPaid.toFixed(2)}</span>
               </div>
               <div class="total-row final">
-                <span>DUE AMOUNT:</span>
+                <span>BALANCE:</span>
                 <span>LKR ${billData.dueAmount.toFixed(2)}</span>
               </div>
             </div>
@@ -503,11 +501,6 @@ const Billing = () => {
           return;
         }
       }
-    }
-
-    if (parseFloat(totalPaid) > totalAmount) {
-      toast.error("Paid amount cannot be greater than total amount");
-      return;
     }
 
     setLoading(true);
@@ -704,11 +697,6 @@ const Billing = () => {
     // Check if it's a valid number
     if (isNaN(numValue)) {
       return;
-    }
-
-    // Validate if paid amount exceeds total amount
-    if (numValue > totalAmount) {
-      toast.error("Paid amount cannot be greater than total amount");
     }
   };
 
@@ -961,7 +949,7 @@ const Billing = () => {
               {/* Due Amount Display */}
               <div className="mt-4 p-3 bg-red-50 rounded-md">
                 <div className="text-lg font-semibold text-red-600">
-                  Due Amount: LKR {dueAmount.toFixed(2)}
+                  Balance: LKR {dueAmount.toFixed(2)}
                 </div>
               </div>
             </div>

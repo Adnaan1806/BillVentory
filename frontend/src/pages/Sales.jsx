@@ -481,7 +481,7 @@ const Sales = () => {
                           colSpan="3"
                           className="px-3 sm:px-4 py-3 text-red-500 text-sm font-bold text-right"
                         >
-                          Due Amount (LKR):
+                          Balance (LKR):
                         </td>
                         <td className="px-3 sm:px-4 py-3 text-red-500 text-sm font-bold">
                           {selectedBill.dueAmount.toFixed(2)}

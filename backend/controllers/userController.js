@@ -410,13 +410,6 @@ const createBill = async (req, res) => {
       });
     }
 
-    if (totalPaid > totalAmount) {
-      return res.json({
-        success: false,
-        message: "Paid amount cannot be greater than the total amount",
-      });
-    }
-
     // Calculate due amount
     const dueAmount = totalAmount - totalPaid;
 
