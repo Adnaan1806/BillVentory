@@ -396,7 +396,7 @@ const Billing = () => {
                     <div class="item-name">${item.name}</div>
                     <div class="item-details">
                       <span>${item.quantity} x ${item.price.toFixed(2)}</span>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      <span style="font-size: 14px;">${(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   </div>
                 `
@@ -408,7 +408,7 @@ const Billing = () => {
             <div class="total-section">
               <div class="total-row">
                 <span>Subtotal:</span>
-                <span>LKR ${billData.subtotal.toFixed(2)}</span>
+                <span style="font-size: 14px;">LKR ${billData.subtotal.toFixed(2)}</span>
               </div>
               ${
                 billData.discountType && billData.discountValue
@@ -419,22 +419,22 @@ const Billing = () => {
                       ? billData.discountValue + "%"
                       : "LKR " + billData.discountValue
                   }):</span>
-                  <span> - ${billData.discountAmount.toFixed(2)}</span>
+                  <span style="font-size: 14px;"> - ${billData.discountAmount.toFixed(2)}</span>
                 </div>
               `
                   : ""
               }
-              <div class="total-row final">
+              <div class="total-row">
                 <span>TOTAL:</span>
-                <span>LKR ${billData.totalAmount.toFixed(2)}</span>
+                <span style="font-size: 14px;">LKR ${billData.totalAmount.toFixed(2)}</span>
               </div>
-              <div class="total-row final">
+              <div class="total-row">
                 <span>TOTAL PAID:</span>
-                <span>LKR ${billData.totalPaid.toFixed(2)}</span>
+                <span style="font-size: 14px;">LKR ${billData.totalPaid.toFixed(2)}</span>
               </div>
-              <div class="total-row final">
+              <div class="total-row">
                 <span>BALANCE:</span>
-                <span>LKR ${billData.dueAmount.toFixed(2)}</span>
+                <span style="font-size: 14px;">LKR ${billData.dueAmount.toFixed(2)}</span>
               </div>
             </div>
             
@@ -443,7 +443,7 @@ const Billing = () => {
               <div class="thank-you">Thank you for purchasing!</div>
               <div class="divider">================================</div>
               <div>Visit us again</div>
-              <div>Contact: +94 XX XXX XXXX</div>
+              <div></div>
             </div>
             
             <!-- Print Button -->
