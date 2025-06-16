@@ -178,7 +178,7 @@ const Billing = () => {
             }
             
             body {
-              font-family: 'Courier New', monospace;
+              font-family: 'Roboto Mono', monospace;
               font-size: 11px;
               line-height: 1.3;
               color: #000;
@@ -194,20 +194,19 @@ const Billing = () => {
             
             .header {
               text-align: center;
-              margin-bottom: 8px;
-              padding-bottom: 8px;
-              border-bottom: 1px dashed #000;
+              margin-bottom: 4px;
+              padding-bottom: 4px;
             }
             
             .company-name {
-              font-size: 16px;
+              font-size: 14px;
               font-weight: bold;
               margin-bottom: 2px;
             }
             
             .company-tagline {
               font-size: 9px;
-              margin-bottom: 6px;
+              margin-bottom: 2px;
             }
             
             .receipt-title {
@@ -217,7 +216,7 @@ const Billing = () => {
             }
             
             .receipt-info {
-              text-align: center;
+              text-align: left;
               margin-bottom: 8px;
               font-size: 10px;
             }
@@ -254,6 +253,7 @@ const Billing = () => {
               padding: 2px 0;
               border-bottom: 1px dotted #ccc;
               font-size: 10px;
+              font-weight: lighter;
             }
             
             .item-name {
@@ -270,7 +270,8 @@ const Billing = () => {
             .total-section {
               margin-top: 8px;
               padding-top: 6px;
-              border-top: 1px dashed #000;
+              border-top: 1px solid #000;
+              font-weight: bold;
             }
             
             .total-row {
@@ -297,9 +298,8 @@ const Billing = () => {
             }
             
             .thank-you {
-              font-size: 11px;
-              font-weight: bold;
-              margin-bottom: 4px;
+              font-size: 10px;
+              margin-bottom: 3px;
             }
             
             .print-button {
@@ -347,57 +347,39 @@ const Billing = () => {
           <div class="receipt-container">
             <!-- Header -->
             <div class="header">
-              <div class="company-name">BillVentory</div>
-              <div class="company-tagline">Inventory Management System</div>
-              <div class="receipt-title">SALES RECEIPT</div>
+              <div class="company-name">U.N COOL SPOT</div>
+              <div class="company-tagline">J/G/S 2 Sri Sangaraja Mw, Colombo 10</div>
+              <div class="company-tagline">Tel: 0774334313</div>
             </div>
             
             <!-- Receipt Info -->
             <div class="receipt-info">
-              <div>Receipt No: ${billId}</div>
-              <div>Billed by: ${userData.name}</div>
-              <div>Date: ${currentDate.toLocaleDateString()}</div>
-              <div>Time: ${currentDate.toLocaleTimeString()}</div>
+              <div>Inv No: ${billId}</div>
+              <div>Date & Time: ${currentDate.toLocaleDateString()} ${currentDate.toLocaleTimeString()}</div>
             </div>
-            
-            <!-- Customer Details -->
-            ${
-              billData.customerName || billData.customerMobile
-                ? `
-            <div class="customer-section">
-              <div class="customer-label">CUSTOMER DETAILS:</div>
-              ${
-                billData.customerName
-                  ? `<div class="customer-value">Name: ${billData.customerName}</div>`
-                  : ""
-              }
-              ${
-                billData.customerMobile
-                  ? `<div class="customer-value">Mobile: ${billData.customerMobile}</div>`
-                  : ""
-              }
-            </div>`
-                : ""
-            }
+
             
             <!-- Items Section -->
             <div class="items-section">
-              <div class="items-header">
+              <div class="items-header" style="border-bottom: 1px dashed #000; margin-bottom: 5px; padding-bottom: 3px;">
                 <div style="display: flex; justify-content: space-between;">
-                  <span>ITEM</span>
-                  <span>QTY x PRICE = TOTAL(LKR)</span>
+                  <span style="width: 45%;">ITEM</span>
+                  <span style="width: 30%; text-align: center;">QTY</span>
+                  <span style="width: 30%; text-align: right;">TOTAL</span>
                 </div>
               </div>
               
               ${billData.items
                 .map(
                   (item) => `
-                  <div class="item-row">
-                    <div class="item-name">${item.name}</div>
-                    <div class="item-details">
-                      <span>${item.quantity} x ${item.price.toFixed(2)}</span>
-                      <span style="font-size: 14px;">${(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
+                  <div class="item-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 12px; border-bottom: 1px solid #f0f0f0; font-weight: lighter;">
+                    <div style="width: 45%;">${item.name}</div>
+                    <div style="width: 25%; text-align: center; font-size: 10px;">${item.price.toFixed(
+                      2
+                    )} x ${item.quantity}</div>
+                    <div style="width: 25%; text-align: right;">${(
+                      item.price * item.quantity
+                    ).toFixed(2)}</div>
                   </div>
                 `
                 )
@@ -407,43 +389,51 @@ const Billing = () => {
             <!-- Total Section -->
             <div class="total-section">
               <div class="total-row">
-                <span>Subtotal:</span>
-                <span style="font-size: 14px;">LKR ${billData.subtotal.toFixed(2)}</span>
+                <span style="font-size: 12px;">Net Total:</span>
+                <span style="font-size: 12px;">LKR ${billData.subtotal.toFixed(
+                  2
+                )}</span>
               </div>
               ${
                 billData.discountType && billData.discountValue
                   ? `
                 <div class="total-row">
-                  <span>Discount (${
+                  <span style="font-size: 12px;">Discount (${
                     billData.discountType === "percentage"
                       ? billData.discountValue + "%"
                       : "LKR " + billData.discountValue
                   }):</span>
-                  <span style="font-size: 14px;"> - ${billData.discountAmount.toFixed(2)}</span>
+                  <span style="font-size: 12px;"> - ${billData.discountAmount.toFixed(
+                    2
+                  )}</span>
                 </div>
               `
                   : ""
               }
               <div class="total-row">
-                <span>TOTAL:</span>
-                <span style="font-size: 14px;">LKR ${billData.totalAmount.toFixed(2)}</span>
+                <span style="font-size: 12px;">Total:</span>
+                <span style="font-size: 12px;">LKR ${billData.totalAmount.toFixed(
+                  2
+                )}</span>
               </div>
               <div class="total-row">
-                <span>TOTAL PAID:</span>
-                <span style="font-size: 14px;">LKR ${billData.totalPaid.toFixed(2)}</span>
+                <span style="font-size: 12px;">Paid Amount:</span>
+                <span style="font-size: 12px;">LKR ${billData.totalPaid.toFixed(
+                  2
+                )}</span>
               </div>
               <div class="total-row">
-                <span>BALANCE:</span>
-                <span style="font-size: 14px;">LKR ${billData.dueAmount.toFixed(2)}</span>
+                <span style="font-size: 12px;">Change Amount:</span>
+                <span style="font-size: 12px;">LKR ${billData.dueAmount.toFixed(
+                  2
+                )}</span>
               </div>
             </div>
             
             <!-- Footer -->
             <div class="footer">
-              <div class="thank-you">Thank you for purchasing!</div>
-              <div class="divider">================================</div>
-              <div>Visit us again</div>
-              <div></div>
+              <div class="thank-you">Thank you, please visit again</div>
+              <div>Cashier Name: ${userData.name}</div>
             </div>
             
             <!-- Print Button -->
