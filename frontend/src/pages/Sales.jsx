@@ -13,6 +13,7 @@ const Sales = () => {
   const [selectedBill, setSelectedBill] = useState(null);
   const [showBillModal, setShowBillModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDiscountOnly, setShowDiscountOnly] = useState(false);
 
   // Fetch all bills
   const fetchBills = async () => {
@@ -38,7 +39,7 @@ const Sales = () => {
     fetchBills();
   }, []);
 
-  // Filter bills based on date range and search query
+  // Filter bills based on date range, search query, and discount filter
   const filteredBills = bills.filter((bill) => {
     // Convert bill date to YYYY-MM-DD format for comparison
     const billDate = new Date(bill.date).toISOString().split("T")[0];
@@ -52,13 +53,19 @@ const Sales = () => {
     // Search query filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      return (
+      const matchesSearch =
         bill._id.toLowerCase().includes(query) ||
         (bill.customerName &&
           bill.customerName.toLowerCase().includes(query)) ||
         (bill.customerMobile &&
-          bill.customerMobile.toLowerCase().includes(query))
-      );
+          bill.customerMobile.toLowerCase().includes(query));
+      if (!matchesSearch) return false;
+    }
+
+    // Discount filter
+    if (showDiscountOnly) {
+      const hasDiscount = bill.discountType && bill.discountValue > 0;
+      if (!hasDiscount) return false;
     }
 
     return true;
@@ -163,27 +170,52 @@ const Sales = () => {
         {/* Header and Search */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h1 className="text-2xl font-semibold">Sales Analytics</h1>
-          <div className="relative w-full sm:w-auto">
-            <input
-              type="text"
-              placeholder="Search by name, mobile, or bill ID"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-64 px-4 py-2 pr-10 border rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-            <svg
-              className="absolute right-3 top-2.5 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <input
+                type="text"
+                placeholder="Search by name, mobile, or bill ID"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 pr-10 border rounded-md focus:ring-2 focus:ring-blue-500"
               />
-            </svg>
+              <svg
+                className="absolute right-3 top-2.5 h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <button
+              onClick={() => setShowDiscountOnly(!showDiscountOnly)}
+              className={`px-4 py-2 rounded-md flex items-center gap-2 ${
+                showDiscountOnly
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
+              </svg>
+              {showDiscountOnly ? "Showing Discounted" : "Show Discounted"}
+            </button>
           </div>
         </div>
 
