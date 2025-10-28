@@ -142,10 +142,9 @@ const updateProfile = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-
 const addInventory = async (req, res) => {
   try {
-    const { name, description, quantity, price, itemCode } = req.body;
+    const { name, description, quantity, price, itemCode, barcode } = req.body;
 
     // Validate input
     if (!name || !description || !quantity || !price || !itemCode) {
@@ -194,6 +193,17 @@ const addInventory = async (req, res) => {
       });
     }
 
+    // Check if barcode is provided and validate
+    if (barcode && barcode.trim() !== "") {
+      const existingBarcode = await Inventory.findOne({ barcode: barcode.trim() });
+      if (existingBarcode) {
+        return res.json({
+          success: false,
+          message: "An item with this barcode already exists",
+        });
+      }
+    }
+
     // Create inventory item
     const newItem = new Inventory({
       name,
@@ -201,6 +211,7 @@ const addInventory = async (req, res) => {
       quantity: Number(quantity),
       price: Number(price),
       itemCode: itemCodeStr,
+      barcode: barcode && barcode.trim() !== "" ? barcode.trim() : undefined,
     });
 
     await newItem.save();
@@ -219,6 +230,82 @@ const addInventory = async (req, res) => {
   }
 };
 
+// const addInventory = async (req, res) => {
+//   try {
+//     const { name, description, quantity, price, itemCode } = req.body;
+
+//     // Validate input
+//     if (!name || !description || !quantity || !price || !itemCode) {
+//       return res.json({ success: false, message: "Please fill in all fields" });
+//     }
+
+//     if (quantity < 0 || price < 0) {
+//       return res.json({
+//         success: false,
+//         message: "Quantity and price must be positive values",
+//       });
+//     }
+
+//     // Validate itemCode
+//     const itemCodeStr = String(itemCode).trim();
+//     const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+
+//     if (itemCodeStr.length === 0) {
+//       return res.json({
+//         success: false,
+//         message: "Item code cannot be empty",
+//       });
+//     }
+
+//     if (itemCodeStr.length > 5) {
+//       return res.json({
+//         success: false,
+//         message: "Item code cannot be more than 5 characters",
+//       });
+//     }
+
+//     if (!alphanumericRegex.test(itemCodeStr)) {
+//       return res.json({
+//         success: false,
+//         message:
+//           "Item code can only contain letters and numbers (no special characters or spaces)",
+//       });
+//     }
+
+//     // Check for existing item with same code
+//     const existingItem = await Inventory.findOne({ itemCode: itemCodeStr });
+//     if (existingItem) {
+//       return res.json({
+//         success: false,
+//         message: "An item with this code already exists",
+//       });
+//     }
+
+//     // Create inventory item
+//     const newItem = new Inventory({
+//       name,
+//       description,
+//       quantity: Number(quantity),
+//       price: Number(price),
+//       itemCode: itemCodeStr,
+//     });
+
+//     await newItem.save();
+
+//     res.json({
+//       success: true,
+//       message: "Inventory item added successfully",
+//       newItem,
+//     });
+//   } catch (error) {
+//     console.error("Error adding inventory item:", error);
+//     res.json({
+//       success: false,
+//       message: error.message || "Error adding inventory item",
+//     });
+//   }
+// };
+
 const getInventory = async (req, res) => {
   try {
     const items = await Inventory.find();
@@ -229,10 +316,32 @@ const getInventory = async (req, res) => {
   }
 };
 
+// API to get inventory item by barcode
+const getInventoryByBarcode = async (req, res) => {
+  try {
+    const { barcode } = req.params;
+    
+    if (!barcode) {
+      return res.json({ success: false, message: "Barcode is required" });
+    }
+
+    const item = await Inventory.findOne({ barcode: barcode.trim() });
+    
+    if (!item) {
+      return res.json({ success: false, message: "Item not found with this barcode" });
+    }
+    
+    res.json({ success: true, item });
+  } catch (error) {
+    console.error("Error fetching item by barcode:", error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
 const updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, quantity, price, itemCode } = req.body;
+    const { name, description, quantity, price, itemCode, barcode } = req.body;
 
     // Validate input
     if (!name || !description || !quantity || !price || !itemCode) {
@@ -274,7 +383,7 @@ const updateInventory = async (req, res) => {
 
     // Check if another item with the same code already exists (excluding current item)
     const existingItem = await Inventory.findOne({
-      _id: { $ne: id }, // Exclude current item
+      _id: { $ne: id },
       itemCode: itemCodeStr,
     });
 
@@ -285,6 +394,20 @@ const updateInventory = async (req, res) => {
       });
     }
 
+    // Check if barcode is provided and validate
+    if (barcode && barcode.trim() !== "") {
+      const existingBarcode = await Inventory.findOne({
+        _id: { $ne: id },
+        barcode: barcode.trim(),
+      });
+      if (existingBarcode) {
+        return res.json({
+          success: false,
+          message: "An item with this barcode already exists",
+        });
+      }
+    }
+
     const updatedItem = await Inventory.findByIdAndUpdate(
       id,
       {
@@ -293,6 +416,7 @@ const updateInventory = async (req, res) => {
         quantity: Number(quantity),
         price: Number(price),
         itemCode: itemCodeStr,
+        barcode: barcode && barcode.trim() !== "" ? barcode.trim() : undefined,
       },
       { new: true, runValidators: true }
     );
@@ -314,6 +438,93 @@ const updateInventory = async (req, res) => {
     });
   }
 };
+
+
+// const updateInventory = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { name, description, quantity, price, itemCode } = req.body;
+
+//     // Validate input
+//     if (!name || !description || !quantity || !price || !itemCode) {
+//       return res.json({ success: false, message: "Please fill in all fields" });
+//     }
+
+//     if (quantity < 0 || price < 0) {
+//       return res.json({
+//         success: false,
+//         message: "Quantity and price must be positive values",
+//       });
+//     }
+
+//     // Validate itemCode
+//     const itemCodeStr = String(itemCode).trim();
+//     const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+
+//     if (itemCodeStr.length === 0) {
+//       return res.json({
+//         success: false,
+//         message: "Item code cannot be empty",
+//       });
+//     }
+
+//     if (itemCodeStr.length > 5) {
+//       return res.json({
+//         success: false,
+//         message: "Item code cannot be more than 5 characters",
+//       });
+//     }
+
+//     if (!alphanumericRegex.test(itemCodeStr)) {
+//       return res.json({
+//         success: false,
+//         message:
+//           "Item code can only contain letters and numbers (no special characters or spaces)",
+//       });
+//     }
+
+//     // Check if another item with the same code already exists (excluding current item)
+//     const existingItem = await Inventory.findOne({
+//       _id: { $ne: id }, // Exclude current item
+//       itemCode: itemCodeStr,
+//     });
+
+//     if (existingItem) {
+//       return res.json({
+//         success: false,
+//         message: "An item with this code already exists",
+//       });
+//     }
+
+//     const updatedItem = await Inventory.findByIdAndUpdate(
+//       id,
+//       {
+//         name,
+//         description,
+//         quantity: Number(quantity),
+//         price: Number(price),
+//         itemCode: itemCodeStr,
+//       },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedItem) {
+//       return res.json({ success: false, message: "Item not found" });
+//     }
+
+//     res.json({
+//       success: true,
+//       message: "Item updated successfully",
+//       updatedItem,
+//     });
+//   } catch (error) {
+//     console.error("Error updating inventory item:", error);
+//     res.json({
+//       success: false,
+//       message: error.message || "Error updating inventory item",
+//     });
+//   }
+// };
 
 const deleteInventory = async (req, res) => {
   try {
@@ -484,4 +695,5 @@ export {
   createBill,
   getBills,
   getBillById,
+  getInventoryByBarcode
 };

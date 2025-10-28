@@ -5,6 +5,11 @@ const inventorySchema = new mongoose.Schema({
   description: { type: String, required: true }, // Optional description
   price: { type: Number, required: true }, // Item price
   itemCode: { type: String, required: true, unique:true },
+  barcode: { 
+    type: String, 
+    unique: true, 
+    sparse: true  // Optional field can be null but must be unique if provided
+  },
   quantity: { type: Number, required: true, default: 0 }, // Stock available
   createdAt: { type: Date, default: Date.now }, // Timestamp for when the item was added
 });
