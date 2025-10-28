@@ -1,5 +1,5 @@
 import express from 'express';
-import { registerUser, loginUser, getProfile, updateProfile, addInventory, getInventory, updateInventory, deleteInventory,createBill,getBills,getBillById } from '../controllers/userController.js';
+import { registerUser, loginUser, getProfile, updateProfile, addInventory, getInventory, updateInventory, deleteInventory,createBill,getBills,getBillById,getInventoryByBarcode  } from '../controllers/userController.js';
 import authUser from '../middlewares/authUser.js';
 import upload from '../middlewares/multer.js';
 
@@ -12,6 +12,7 @@ userRouter.get('/get-profile', authUser, getProfile)
 userRouter.post('/update-profile', upload.single('image'), authUser, updateProfile)
 userRouter.post('/add-inventory', authUser, addInventory)
 userRouter.get('/get-inventory', authUser, getInventory)
+userRouter.get('/get-inventory/barcode/:barcode', authUser, getInventoryByBarcode)
 userRouter.put('/update-inventory/:id', authUser, updateInventory)
 userRouter.delete('/delete-inventory/:id', authUser, deleteInventory)
 
