@@ -20,6 +20,11 @@ const Inventory = () => {
   const [editingItem, setEditingItem] = useState(null);
   const { backendUrl, token } = useContext(AppContext);
 
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const barcodeInputRef = useRef(null);
+  const scanTimeoutRef = useRef(null);
+
   const fetchInventory = async () => {
     try {
       const response = await axios.get(backendUrl + "/api/user/get-inventory", {
@@ -40,6 +45,60 @@ const Inventory = () => {
   useEffect(() => {
     fetchInventory();
   }, []);
+
+  // Basically auto focus barcode input when page loads
+   useEffect(() => {
+    if (barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
+    }
+  }, []);
+
+  // Main palce barcode is scanned
+   const handleBarcodeInput = async (barcode) => {
+    if (!barcode || barcode.trim() === "") return;
+
+    setIsScanning(true);
+    toast.loading("Scanning barcode...", { id: "barcode-scan" });
+
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/user/get-inventory/barcode/${barcode.trim()}`,
+        { headers: { token } }
+      );
+
+      toast.dismiss("barcode-scan");
+
+      if (response.data.success) {
+        // Item found - open edit modal with pre-filled data
+        toast.success("Item found! Opening edit form...");
+        setEditingItem(response.data.item);
+        setIsPopupOpen(true);
+      } else {
+        // Item not found - open add modal with barcode pre-filled
+        toast.success("New barcode! Opening add form...");
+        setNewItem({
+          name: "",
+          description: "",
+          quantity: "",
+          price: "",
+          itemCode: "",
+          barcode: barcode.trim(),
+        });
+        setEditingItem(null);
+        setIsPopupOpen(true);
+      }
+    } catch (error) {
+      toast.dismiss("barcode-scan");
+      toast.error("Error scanning barcode");
+      console.error(error);
+    } finally {
+      setIsScanning(false);
+      setBarcodeInput("");
+    }
+  };
+
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
