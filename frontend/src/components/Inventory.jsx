@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useContext } from "react";
@@ -97,7 +97,27 @@ const Inventory = () => {
     }
   };
 
+ // Listen for barcode scanner input
+  const handleBarcodeKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (barcodeInput.trim()) {
+        handleBarcodeInput(barcodeInput);
+      }
+    } else {
+      // Clear timeout if user is still typing
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
+      }
 
+      // Auto-submit after 100ms of inactivity (scanner is fast)
+      scanTimeoutRef.current = setTimeout(() => {
+        if (barcodeInput.trim()) {
+          handleBarcodeInput(barcodeInput);
+        }
+      }, 100);
+    }
+  };
 
 
   const handleChange = (e) => {
@@ -126,6 +146,7 @@ const Inventory = () => {
           quantity: "",
           price: "",
           itemCode: "",
+          barcode: "",
         });
         setIsPopupOpen(false);
       } else {
@@ -217,6 +238,30 @@ const Inventory = () => {
 
   return (
     <div className="p-2 sm:p-6">
+      {/* Barcode part */}
+     <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-blue-700 mb-1">
+              {isScanning ? "Scanning..." : "Scan Barcode Here"}
+            </label>
+            <input
+              ref={barcodeInputRef}
+              type="text"
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              onKeyPress={handleBarcodeKeyPress}
+              placeholder="Focus here and scan barcode..."
+              className="w-full px-4 py-2 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={isScanning}
+            />
+            <p className="text-xs text-gray-600 mt-1">
+              Click here and scan with your barcode scanner
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
         <h2 className="text-xl sm:text-2xl font-semibold">Inventory Items</h2>
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
@@ -236,6 +281,7 @@ const Inventory = () => {
                 quantity: "",
                 price: "",
                 itemCode: "",
+                barcode: "",
               });
               setIsPopupOpen(true);
             }}
@@ -253,6 +299,9 @@ const Inventory = () => {
               <tr className="bg-gray-100">
                 <th className="py-2 px-3 sm:px-4 border-b text-left">
                   Item Code
+                </th>
+                <th className="py-2 px-3 sm:px-4 border-b text-left">
+                  Barcode
                 </th>
                 <th className="py-2 px-3 sm:px-4 border-b text-left">Name</th>
                 <th className="py-2 px-3 sm:px-4 border-b text-right">Qty</th>
@@ -278,6 +327,11 @@ const Inventory = () => {
                   <tr key={item._id} className="hover:bg-gray-50">
                     <td className="py-2 px-3 sm:px-4 border-b">
                       <div>{item.itemCode}</div>
+                    </td>
+                    <td className="py-2 px-3 sm:px-4 border-b">
+                      <div className="text-sm text-gray-600">
+                        {item.barcode || "-"}
+                      </div>
                     </td>
                     <td className="py-2 px-3 sm:px-4 border-b">{item.name}</td>
                     <td className="py-2 px-3 sm:px-4 border-b text-right">
@@ -332,6 +386,19 @@ const Inventory = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                   required
+                />
+              </div>
+               <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Barcode (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="barcode"
+                  value={editingItem ? editingItem.barcode || "" : newItem.barcode || ""}
+                  onChange={handleChange}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                  placeholder="Scan or enter barcode"
                 />
               </div>
               <div>

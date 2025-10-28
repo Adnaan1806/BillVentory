@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import  { useContext, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { FiSearch, FiPlus, FiMinus, FiTrash2 } from "react-icons/fi";
@@ -20,6 +20,13 @@ const Billing = () => {
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [discountError, setDiscountError] = useState("");
   const [totalPaid, setTotalPaid] = useState(0);
+
+  // Barcode variables
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const barcodeInputRef = useRef(null);
+  const scanTimeoutRef = useRef(null);
+
 
   // Validate mobile number format
   const validateMobileNumber = (number) => {
