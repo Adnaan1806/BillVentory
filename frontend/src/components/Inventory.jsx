@@ -55,69 +55,65 @@ const Inventory = () => {
 
   // Main palce barcode is scanned
    const handleBarcodeInput = async (barcode) => {
-    if (!barcode || barcode.trim() === "") return;
+  if (!barcode || barcode.trim() === "" || isScanning) return; 
 
-    setIsScanning(true);
-    toast.loading("Scanning barcode...", { id: "barcode-scan" });
+  setIsScanning(true);
+  toast.loading("Scanning barcode...", { id: "barcode-scan" });
 
-    try {
-      const response = await axios.get(
-        `${backendUrl}/api/user/get-inventory/barcode/${barcode.trim()}`,
-        { headers: { token } }
-      );
+  try {
+    const response = await axios.get(
+      `${backendUrl}/api/user/get-inventory/barcode/${barcode.trim()}`,
+      { headers: { token } }
+    );
 
-      toast.dismiss("barcode-scan");
+    toast.dismiss("barcode-scan");
 
-      if (response.data.success) {
-        // Item found - open edit modal with pre-filled data
-        toast.success("Item found! Opening edit form...");
-        setEditingItem(response.data.item);
-        setIsPopupOpen(true);
-      } else {
-        // Item not found - open add modal with barcode pre-filled
-        toast.success("New barcode! Opening add form...");
-        setNewItem({
-          name: "",
-          description: "",
-          quantity: "",
-          price: "",
-          itemCode: "",
-          barcode: barcode.trim(),
-        });
-        setEditingItem(null);
-        setIsPopupOpen(true);
-      }
-    } catch (error) {
-      toast.dismiss("barcode-scan");
-      toast.error("Error scanning barcode");
-      console.error(error);
-    } finally {
-      setIsScanning(false);
-      setBarcodeInput("");
+    if (response.data.success) {
+      // Item found - open edit modal with pre-filled data
+      toast.success("Item found! Opening edit form...");
+      setEditingItem(response.data.item);
+      setIsPopupOpen(true);
+    } else {
+      // Item not found - open add modal with barcode pre-filled
+      toast.success("New barcode! Opening add form...");
+      setNewItem({
+        name: "",
+        description: "",
+        quantity: "",
+        price: "",
+        itemCode: "",
+        barcode: barcode.trim(),
+      });
+      setEditingItem(null);
+      setIsPopupOpen(true);
     }
-  };
+  } catch (error) {
+    toast.dismiss("barcode-scan");
+    toast.error("Error scanning barcode");
+    console.error(error);
+  } finally {
+    setIsScanning(false);
+    setBarcodeInput("");
+  }
+};
 
  // Listen for barcode scanner input
-  const handleBarcodeKeyPress = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (barcodeInput.trim()) {
-        handleBarcodeInput(barcodeInput);
-      }
-    } else {
-      // Clear timeout if user is still typing
-      if (scanTimeoutRef.current) {
-        clearTimeout(scanTimeoutRef.current);
-      }
-
-      // Auto-submit after 100ms of inactivity (scanner is fast)
-      scanTimeoutRef.current = setTimeout(() => {
-        if (barcodeInput.trim()) {
-          handleBarcodeInput(barcodeInput);
-        }
-      }, 100);
+const handleBarcodeKeyPress = (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    
+    // Clear any pending timeout
+    if (scanTimeoutRef.current) {
+      clearTimeout(scanTimeoutRef.current);
+      scanTimeoutRef.current = null;
     }
-  };
+    
+    // Only trigger if we have input
+    if (barcodeInput.trim()) {
+      handleBarcodeInput(barcodeInput);
+    }
+  }
+};
 
 
   const handleChange = (e) => {

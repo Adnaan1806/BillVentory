@@ -22,10 +22,10 @@ const Billing = () => {
   const [totalPaid, setTotalPaid] = useState(0);
 
   // Barcode variables
-  const [barcodeInput, setBarcodeInput] = useState("");
+  const [barcodeBuffer, setBarcodeBuffer] = useState("");
   const [isScanning, setIsScanning] = useState(false);
-  const barcodeInputRef = useRef(null);
-  const scanTimeoutRef = useRef(null);
+  const barcodeTimeoutRef = useRef(null);
+  const lastKeypressTimeRef = useRef(null);
 
 
   // Validate mobile number format
@@ -58,6 +58,133 @@ const Billing = () => {
 
     setCustomerMobile(number);
   };
+
+  // barcode handlers 
+  useEffect(() => {
+  const handleGlobalKeyPress = (e) => {
+    // Ignore if user is typing in input fields (except barcode fields)
+    if (
+      e.target.tagName === "INPUT" ||
+      e.target.tagName === "TEXTAREA" ||
+      e.target.isContentEditable
+    ) {
+      return; // Let user type normally
+    }
+
+    // Ignore modifier keys
+    if (e.ctrlKey || e.altKey || e.metaKey) {
+      return;
+    }
+
+    const currentTime = Date.now();
+    const timeSinceLastKeypress = lastKeypressTimeRef.current
+      ? currentTime - lastKeypressTimeRef.current
+      : 0;
+
+    // If Enter key is pressed, process the barcode
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (barcodeBuffer.trim()) {
+        handleBarcodeInput(barcodeBuffer);
+        setBarcodeBuffer("");
+      }
+      return;
+    }
+
+    // Build the barcode buffer
+    if (e.key.length === 1) {
+      // Single character (number, letter, etc.)
+      setBarcodeBuffer((prev) => {
+        // Reset buffer if more than 50ms passed (new scan started)
+        if (timeSinceLastKeypress > 50) {
+          return e.key;
+        }
+        return prev + e.key;
+      });
+
+      lastKeypressTimeRef.current = currentTime;
+
+      // Clear buffer after 200ms of inactivity
+      if (barcodeTimeoutRef.current) {
+        clearTimeout(barcodeTimeoutRef.current);
+      }
+      barcodeTimeoutRef.current = setTimeout(() => {
+        setBarcodeBuffer("");
+      }, 200);
+    }
+  };
+
+  // Add global listener
+  document.addEventListener("keydown", handleGlobalKeyPress);
+
+  // Cleanup
+  return () => {
+    document.removeEventListener("keydown", handleGlobalKeyPress);
+    if (barcodeTimeoutRef.current) {
+      clearTimeout(barcodeTimeoutRef.current);
+    }
+  };
+}, [barcodeBuffer]); // Dependency on barcodeBuffer
+
+const handleBarcodeInput = async (barcode) => {
+  if (!barcode || barcode.trim() === "" || isScanning) return;
+
+  setIsScanning(true);
+  toast.loading("Scanning barcode...", { id: "barcode-scan" });
+
+  try {
+    const response = await axios.get(
+      `${backendUrl}/api/user/get-inventory/barcode/${barcode.trim()}`,
+      { headers: { token } }
+    );
+
+    toast.dismiss("barcode-scan");
+
+    if (response.data.success) {
+      const item = response.data.item;
+      
+      if (item.quantity <= 0) {
+        toast.error("Item is out of stock!");
+        return;
+      }
+
+      const existingItem = selectedItems.find((i) => i.itemId === item._id);
+      
+      if (existingItem) {
+        if (existingItem.quantity >= item.quantity) {
+          toast.error("Cannot add more - insufficient stock!");
+          return;
+        }
+        setSelectedItems(
+          selectedItems.map((i) =>
+            i.itemId === item._id ? { ...i, quantity: i.quantity + 1 } : i
+          )
+        );
+        toast.success(`${item.name} quantity increased!`);
+      } else {
+        setSelectedItems([
+          ...selectedItems,
+          {
+            itemId: item._id,
+            name: item.name,
+            price: item.price,
+            quantity: 1,
+          },
+        ]);
+        toast.success(`${item.name} added to bill!`);
+      }
+    } else {
+      toast.error("Item not found in inventory! Please add it first.");
+    }
+  } catch (error) {
+    toast.dismiss("barcode-scan");
+    toast.error("Error scanning barcode");
+    console.error(error);
+  } finally {
+    setIsScanning(false);
+  }
+};
+
 
   // Fetch inventory items
   useEffect(() => {
@@ -697,16 +824,52 @@ const Billing = () => {
     }
   };
 
-  const filteredItems = inventoryItems.filter(
+    const filteredItems = inventoryItems.filter(
     (item) =>
       (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.itemCode &&
-          item.itemCode.toLowerCase().includes(searchQuery.toLowerCase()))) &&
+          item.itemCode.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.barcode &&
+          item.barcode.toLowerCase().includes(searchQuery.toLowerCase()))) &&
       item.quantity > 0
   );
 
+
   return (
     <div className="max-w-7xl mx-auto p-6">
+        {/* Varcode part*/}
+{/* Barcode Scanner Status */}
+      <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {isScanning ? (
+              <>
+                <div>
+                  <p className="font-semibold text-green-800">Scanning Barcode...</p>
+                  <p className="text-xs text-gray-600">Processing item...</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <p className="font-semibold text-green-800">Barcode Scanner Ready</p>
+                  <p className="text-xs text-gray-600">
+                    Just scan items - no clicking needed!
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          {barcodeBuffer && !isScanning && (
+            <div className="text-xs text-gray-500 font-mono bg-white px-2 py-1 rounded">
+              Buffer: {barcodeBuffer}
+            </div>
+          )}
+        </div>
+      </div>
+
+
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left side - Customer Info and Items List */}
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -746,7 +909,7 @@ const Billing = () => {
             <FiSearch className="absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search items by Item code and Name"
+              placeholder="Search items by Item code, barcode and Name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 p-2 border rounded"
@@ -766,7 +929,7 @@ const Billing = () => {
                     <div>
                       <p className="font-medium">{item.name}</p>
                       <p className="text-sm text-gray-600">
-                        Item Code: {item.itemCode} | Stock: {item.quantity} |
+                        Item Code: {item.itemCode} {item.barcode && `| Barcode: ${item.barcode}`} | Stock: {item.quantity} |
                         Price: LKR {item.price}
                       </p>
                     </div>
