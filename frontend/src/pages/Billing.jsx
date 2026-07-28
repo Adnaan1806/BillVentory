@@ -347,9 +347,9 @@ const Billing = () => {
           <div class="receipt-container">
             <!-- Header -->
             <div class="header">
-              <div class="company-name">U.N COOL SPOT</div>
-              <div class="company-tagline">J/G/S 2 Sri Sangaraja Mw, Colombo 10</div>
-              <div class="company-tagline">Tel: 0774334313</div>
+              <div class="company-name">JUHA HARDWARE</div>
+              <div class="company-tagline">No.202. SRI SANGARAJA MAWATHA COLOMBO 10</div>
+              <div class="company-tagline">Tel: 0774334313-0775977907</div>
             </div>
             
             <!-- Receipt Info -->
